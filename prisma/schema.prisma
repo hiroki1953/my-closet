@@ -1,0 +1,288 @@
+// My Closet アプリのPrismaスキーマ
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// ユーザーロール列挙型
+enum UserRole {
+  USER
+  STYLIST
+}
+
+// ユーザーモデル
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String?
+  name          String?
+  role          UserRole  @default(USER)
+  profile       Json?     // 身長、体重、好みのスタイル等
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // リレーション
+  accounts         Account[]
+  sessions         Session[]
+  clothingItems    ClothingItem[]
+  outfits          Outfit[]
+  sentMessages     Message[] @relation("UserSentMessages")
+  receivedMessages Message[] @relation("UserReceivedMessages")
+  userProfile      UserProfile?
+
+  // スタイリスト関連
+  itemEvaluations  ItemEvaluation[] @relation("StylistEvaluations")
+  createdOutfits   Outfit[] @relation("StylistCreatedOutfits")
+  purchaseRecommendations PurchaseRecommendation[] @relation("StylistRecommendations")
+  receivedRecommendations PurchaseRecommendation[] @relation("UserRecommendations")
+
+  @@map("users")
+}
+
+// NextAuth.js用のAccountモデル
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+// NextAuth.js用のSessionモデル
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// NextAuth.js用のVerificationTokenモデル
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// 服のカテゴリ列挙型
+enum ClothingCategory {
+  TOPS
+  BOTTOMS
+  SHOES
+  ACCESSORIES
+  OUTERWEAR
+}
+
+// 服のステータス列挙型
+enum ClothingStatus {
+  ACTIVE
+  INACTIVE
+  DISPOSED
+  ROOMWEAR
+}
+
+// アイテム評価タイプ列挙型
+enum EvaluationType {
+  NECESSARY
+  UNNECESSARY
+  KEEP
+}
+
+// 服アイテムモデル
+model ClothingItem {
+  id           String            @id @default(cuid())
+  userId       String
+  imageUrl     String
+  category     ClothingCategory
+  color        String
+  brand        String?
+  purchaseDate DateTime?
+  status       ClothingStatus    @default(ACTIVE)
+  description  String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  // リレーション
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  outfits     OutfitClothingItem[]
+  evaluations ItemEvaluation[]
+
+  @@map("clothing_items")
+}
+
+// コーディネートモデル
+model Outfit {
+  id             String   @id @default(cuid())
+  userId         String
+  title          String
+  stylistComment String?
+  tips           String?
+  stylingAdvice  String?  // 着こなしアドバイス
+  imageUrl       String?
+  createdById    String   // うーちゃん（スタイリスト）のユーザーID
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // リレーション
+  user          User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdBy     User                 @relation("StylistCreatedOutfits", fields: [createdById], references: [id])
+  clothingItems OutfitClothingItem[]
+
+  @@map("outfits")
+}
+
+// コーディネートと服アイテムの中間テーブル
+model OutfitClothingItem {
+  id             String @id @default(cuid())
+  outfitId       String
+  clothingItemId String
+
+  // リレーション
+  outfit       Outfit       @relation(fields: [outfitId], references: [id], onDelete: Cascade)
+  clothingItem ClothingItem @relation(fields: [clothingItemId], references: [id], onDelete: Cascade)
+
+  @@unique([outfitId, clothingItemId])
+  @@map("outfit_clothing_items")
+}
+
+// メッセージ送信者タイプ
+enum SenderType {
+  USER
+  STYLIST
+}
+
+// メッセージモデル
+model Message {
+  id         String     @id @default(cuid())
+  fromUserId String
+  toUserId   String
+  senderType SenderType
+  content    String
+  readAt     DateTime?
+  createdAt  DateTime   @default(now())
+
+  // リレーション
+  fromUser User @relation("UserSentMessages", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser   User @relation("UserReceivedMessages", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+// アイテム評価モデル
+model ItemEvaluation {
+  id           String         @id @default(cuid())
+  itemId       String
+  stylistId    String
+  evaluation   EvaluationType
+  comment      String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  // リレーション
+  item     ClothingItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  stylist  User         @relation("StylistEvaluations", fields: [stylistId], references: [id])
+
+  @@unique([itemId, stylistId])
+  @@map("item_evaluations")
+}
+
+// 購入提案優先度列挙型
+enum PurchasePriority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+// 購入提案ステータス列挙型
+enum PurchaseStatus {
+  PENDING
+  VIEWED
+  PURCHASED
+  DECLINED
+}
+
+// 購入提案モデル
+model PurchaseRecommendation {
+  id          String           @id @default(cuid())
+  userId      String
+  stylistId   String
+  itemType    String
+  description String
+  reason      String?
+  priority    PurchasePriority @default(MEDIUM)
+  status      PurchaseStatus   @default(PENDING)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  // リレーション
+  user     User @relation("UserRecommendations", fields: [userId], references: [id], onDelete: Cascade)
+  stylist  User @relation("StylistRecommendations", fields: [stylistId], references: [id])
+
+  @@map("purchase_recommendations")
+}
+
+// 骨格タイプ列挙型
+enum BodyType {
+  STRAIGHT    // ストレート
+  WAVE        // ウェーブ
+  NATURAL     // ナチュラル
+  UNKNOWN     // 不明
+}
+
+// パーソナルカラータイプ列挙型
+enum PersonalColorType {
+  SPRING      // スプリング（イエベ春）
+  SUMMER      // サマー（ブルベ夏）
+  AUTUMN      // オータム（イエベ秋）
+  WINTER      // ウィンター（ブルベ冬）
+  UNKNOWN     // 不明
+}
+
+// ユーザープロフィール詳細モデル
+model UserProfile {
+  id               String              @id @default(cuid())
+  userId           String              @unique
+  height           Int?                // 身長（cm）
+  weight           Int?                // 体重（kg）
+  age              Int?                // 年齢
+  bodyType         BodyType?           // 骨格タイプ
+  personalColor    PersonalColorType?  // パーソナルカラー
+  profileImageUrl  String?             // プロフィール写真URL
+  stylePreference  String?             // スタイルの好み（自由記述）
+  concerns         String?             // 悩み・コンプレックス（自由記述）
+  goals            String?             // 目標・なりたいイメージ（自由記述）
+  budget           String?             // 予算感
+  lifestyle        String?             // ライフスタイル（自由記述）
+  isPublic         Boolean             @default(false) // プロフィール公開設定
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  // リレーション
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
