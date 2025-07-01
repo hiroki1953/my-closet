@@ -1,6 +1,7 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
 
 :root {
   /* My Closet カラーパレット */
@@ -328,7 +329,7 @@ body {
 
 @layer base {
   * {
-    @apply border-gray-200;
+    @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
