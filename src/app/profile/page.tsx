@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Header } from "@/components/layout/header";
-import { ProfileImageUpload } from "@/components/profile/profile-image-upload-new";
+import { ProfileImageUpload } from "@/components/profile/profile-image-upload";
 
 interface UserProfile {
   id?: string;
@@ -160,7 +160,7 @@ export default function ProfilePage() {
             <CardContent className="space-y-4">
               {/* プロフィール写真 */}
               <ProfileImageUpload
-                imagePreview={profile.profileImageUrl}
+                currentImageUrl={profile.profileImageUrl}
                 onImageChange={(imageUrl) =>
                   setProfile({ ...profile, profileImageUrl: imageUrl })
                 }
