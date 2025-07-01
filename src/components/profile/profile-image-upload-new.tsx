@@ -49,7 +49,7 @@ export function ProfileImageUpload({
     if (file) {
       uploadImage(file);
     }
-  }, []);
+  }, [uploadImage]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -75,7 +75,7 @@ export function ProfileImageUpload({
       }
     };
     input.click();
-  }, [uploading]);
+  }, [uploading, uploadImage]);
 
   return (
     <div className="space-y-2">

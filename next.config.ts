@@ -9,7 +9,33 @@ const nextConfig: NextConfig = {
       },
     ],
     dangerouslyAllowSVG: true,
-    unoptimized: true, // 開発時は最適化を無効化
+    unoptimized: false, // 本番環境では画像最適化を有効化
+  },
+  serverExternalPackages: ['@prisma/client'],
+  // 本番環境でのパフォーマンス最適化
+  compress: true,
+  poweredByHeader: false,
+  // 静的ファイルキャッシュ設定
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+        ],
+      },
+    ];
   },
 };
 
