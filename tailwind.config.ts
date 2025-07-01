@@ -9,13 +9,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        'primary-navy': '#1a202c',
-        'accent-blue': '#3b82f6',
-        'light-gray': '#f7fafc',
-        'medium-gray': '#e2e8f0',
-        'dark-gray': '#4a5568',
-        'text-primary': '#1a202c',
-        'text-secondary': '#4a5568',
+        "primary-navy": "#1a202c",
+        "accent-blue": "#3b82f6",
+        "light-gray": "#f7fafc",
+        "medium-gray": "#e2e8f0",
+        "dark-gray": "#4a5568",
+        "text-primary": "#1a202c",
+        "text-secondary": "#4a5568",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {
