@@ -5,14 +5,15 @@ import { z } from "zod";
 
 const registerSchema = z.object({
   email: z.string().email("有効なメールアドレスを入力してください"),
-  password: z.string().min(8, "パスワードは8文字以上で入力してください"),
+  password: z.string().min(6, "パスワードは6文字以上で入力してください"),
   name: z.string().min(1, "名前を入力してください"),
+  role: z.enum(["USER", "STYLIST"]).optional().default("USER"),
 });
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password, name } = registerSchema.parse(body);
+    const { email, password, name, role } = registerSchema.parse(body);
 
     // 既存ユーザーチェック
     const existingUser = await prisma.user.findUnique({
@@ -35,11 +36,13 @@ export async function POST(request: NextRequest) {
         email,
         passwordHash,
         name,
+        role,
       },
       select: {
         id: true,
         email: true,
         name: true,
+        role: true,
         createdAt: true,
       },
     });

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function SignUp() {
   const [formData, setFormData] = useState({
@@ -21,6 +22,7 @@ export default function SignUp() {
     email: "",
     password: "",
     confirmPassword: "",
+    role: "USER" as "USER" | "STYLIST",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -30,6 +32,13 @@ export default function SignUp() {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleRoleChange = (value: "USER" | "STYLIST") => {
+    setFormData((prev) => ({
+      ...prev,
+      role: value,
     }));
   };
 
@@ -62,6 +71,7 @@ export default function SignUp() {
           name: formData.name,
           email: formData.email,
           password: formData.password,
+          role: formData.role,
         }),
       });
 
@@ -81,7 +91,12 @@ export default function SignUp() {
       if (result?.error) {
         setError("ログインに失敗しました");
       } else {
-        router.push("/dashboard");
+        // ロールに応じてリダイレクト
+        if (formData.role === "STYLIST") {
+          router.push("/stylist");
+        } else {
+          router.push("/dashboard");
+        }
       }
     } catch {
       setError("登録に失敗しました");
@@ -139,6 +154,25 @@ export default function SignUp() {
                   onChange={handleChange}
                   required
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="role">アカウントタイプ</Label>
+                <Select value={formData.role} onValueChange={handleRoleChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="アカウントタイプを選択" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="USER">一般ユーザー</SelectItem>
+                    <SelectItem value="STYLIST">スタイリスト</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-muted-foreground">
+                  {formData.role === "STYLIST" ? 
+                    "スタイリストとしてユーザーのコーディネートを提案します" : 
+                    "コーディネート提案を受けるユーザーとして登録します"
+                  }
+                </p>
               </div>
 
               <div className="space-y-2">
