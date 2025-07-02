@@ -1,16 +1,18 @@
 # My Closet（マイクローゼット）
 
-うーちゃんがあなたの専属スタイリストとして、20-30代男性向けのクローゼット管理とコーディネート提案を行うWebアプリケーションです。
+うーちゃんがあなたの専属スタイリストとして、20-30 代男性向けのクローゼット管理とコーディネート提案を行う Web アプリケーションです。
 
 ## 機能概要
 
 ### ユーザー機能
+
 - **クローゼット管理**: 服の写真登録とカテゴリ別管理
 - **ステータス管理**: 使用中・使わない・部屋着の分類管理
 - **スタイリスト評価の確認**: プロのスタイリストによるアイテム評価の閲覧
 - **コーディネート閲覧**: パーソナライズされた着こなし提案の確認
 
 ### スタイリスト機能
+
 - **ユーザー管理**: 担当ユーザーの一覧と詳細管理
 - **アイテム評価**: 服のアイテム評価（必要/不要/キープ）とコメント
 - **コーディネート作成**: ユーザー向けの着こなし提案作成
@@ -64,22 +66,63 @@ npm run dev
 
 ## デプロイ
 
-### Vercelでのデプロイ
+### Vercel でのデプロイ
 
-1. **Vercelアカウントの作成**: [vercel.com](https://vercel.com) でアカウントを作成
-2. **GitHubリポジトリとの連携**: プロジェクトをGitHubにプッシュ
-3. **Vercelでプロジェクトをインポート**: VercelでGitHubリポジトリを選択
-4. **環境変数の設定**: Vercelの設定画面で環境変数を追加
-5. **データベースの設定**: 本番用PostgreSQLデータベースを設定
+1. **Vercel アカウントの作成**: [vercel.com](https://vercel.com) でアカウントを作成
+2. **GitHub リポジトリとの連携**: プロジェクトを GitHub にプッシュ
+3. **Vercel でプロジェクトをインポート**: Vercel で GitHub リポジトリを選択
+4. **環境変数の設定**: Vercel の設定画面で環境変数を追加
+5. **データベースの設定**: 本番用 PostgreSQL データベースを設定
 
 ### 必要な環境変数
 
-- `DATABASE_URL`: PostgreSQLデータベースのURL
-- `NEXTAUTH_URL`: アプリケーションのURL
-- `NEXTAUTH_SECRET`: NextAuth.jsのシークレットキー
-- `NEXT_PUBLIC_SUPABASE_URL`: Supabaseプロジェクトの URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabaseの匿名キー
-- `SUPABASE_SERVICE_ROLE_KEY`: Supabaseのサービスロールキー
+#### 開発環境 (.env)
+
+- `DATABASE_URL`: PostgreSQL データベースの URL（開発用）
+- `DIRECT_URL`: PostgreSQL データベースの直接接続 URL（開発用）
+- `NEXTAUTH_URL`: http://localhost:3000
+- `AUTH_SECRET`: NextAuth.js のシークレットキー
+- `NEXT_PUBLIC_SUPABASE_URL`: Supabase プロジェクトの URL（開発用）
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase の匿名キー（開発用）
+- `SUPABASE_SERVICE_ROLE_KEY`: Supabase のサービスロールキー（開発用）
+
+#### 本番環境 (Vercel 環境変数)
+
+- `DATABASE_URL`: PostgreSQL データベースの URL（本番用）
+- `DIRECT_URL`: PostgreSQL データベースの直接接続 URL（本番用）
+- `NEXTAUTH_URL`: https://your-app.vercel.app
+- `AUTH_SECRET`: NextAuth.js のシークレットキー
+- `NEXT_PUBLIC_SUPABASE_URL`: Supabase プロジェクトの URL（本番用）
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase の匿名キー（本番用）
+- `SUPABASE_SERVICE_ROLE_KEY`: Supabase のサービスロールキー（本番用）
+
+## 環境分離
+
+このプロジェクトは開発環境と本番環境で異なる Supabase プロジェクトを使用します：
+
+- **開発環境**: 新しく作成した Supabase プロジェクト
+- **本番環境**: 既存の Supabase プロジェクト（vvkcoufkuecqailekaeq）
+
+### 開発環境の初期セットアップ
+
+新しい開発者がプロジェクトに参加する場合：
+
+1. 新しい Supabase プロジェクトを作成
+2. `.env`ファイルを作成し、開発用の Supabase 情報を設定
+3. 開発環境のセットアップを実行:
+
+```bash
+npm run setup:dev    # Supabaseバケット等のセットアップ
+npm run db:push      # データベーススキーマの適用
+npm run db:seed      # 開発用データの投入
+npm run dev          # 開発サーバー起動
+```
+
+または一括実行:
+
+```bash
+npm run dev:full     # 上記すべてを一括実行
+```
 
 ## ユーザーガイド
 
