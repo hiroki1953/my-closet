@@ -29,7 +29,11 @@ export async function GET(
       },
       include: {
         clothingItems: {
-          where: { status: "ACTIVE" },
+          where: {
+            status: {
+              not: "DISPOSED",
+            },
+          },
           include: {
             evaluations: {
               orderBy: { createdAt: "desc" },
@@ -44,7 +48,11 @@ export async function GET(
         _count: {
           select: {
             clothingItems: {
-              where: { status: "ACTIVE" },
+              where: {
+                status: {
+                  not: "DISPOSED",
+                },
+              },
             },
             outfits: true,
           },

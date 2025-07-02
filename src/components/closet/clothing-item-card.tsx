@@ -134,12 +134,25 @@ export function ClothingItemCard({
 
   return (
     <Card
-      className={`overflow-hidden hover:shadow-lg transition-shadow ${
+      className={`overflow-hidden hover:shadow-lg transition-all duration-300 ${
         item.status === "INACTIVE"
-          ? "opacity-60 bg-gray-50"
+          ? "opacity-60 bg-gray-50 border-gray-300"
           : item.status === "ROOMWEAR"
-          ? "border-blue-200 bg-blue-50"
-          : ""
+          ? "border-blue-200 bg-blue-50 hover:shadow-blue-200"
+          : latestEvaluation
+          ? (() => {
+              switch (latestEvaluation.evaluation) {
+                case "NECESSARY":
+                  return "border-green-300 bg-gradient-to-br from-green-50 to-emerald-50 hover:shadow-green-200";
+                case "UNNECESSARY":
+                  return "border-red-300 bg-gradient-to-br from-red-50 to-rose-50 hover:shadow-red-200";
+                case "KEEP":
+                  return "border-yellow-300 bg-gradient-to-br from-yellow-50 to-amber-50 hover:shadow-yellow-200";
+                default:
+                  return "";
+              }
+            })()
+          : "hover:shadow-gray-200"
       }`}
     >
       <CardContent className="p-0">
@@ -158,16 +171,16 @@ export function ClothingItemCard({
             </div>
           )}
 
-          {/* スタイリスト評価バッジ */}
+          {/* スタイリスト評価バッジ - 改善版 */}
           {latestEvaluation && (
             <div className="absolute top-2 right-2 z-10">
               <Badge
-                className={`text-xs ${getEvaluationColor(
+                className={`text-xs shadow-lg border-2 border-white backdrop-blur-sm transition-all hover:scale-105 ${getEvaluationColor(
                   latestEvaluation.evaluation
                 )}`}
               >
                 {getEvaluationIcon(latestEvaluation.evaluation)}
-                <span className="ml-1">
+                <span className="ml-1 font-semibold">
                   {getEvaluationText(latestEvaluation.evaluation)}
                 </span>
               </Badge>

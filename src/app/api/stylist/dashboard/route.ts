@@ -33,9 +33,12 @@ export async function GET() {
         where: { role: "USER" },
       }),
 
-      // 未評価アイテム数（評価されていないアイテム）
+      // 未評価アイテム数（削除されていない、評価されていないアイテム）
       prisma.clothingItem.count({
         where: {
+          status: {
+            not: "DISPOSED",
+          },
           evaluations: {
             none: {},
           },
@@ -65,11 +68,22 @@ export async function GET() {
           },
           _count: {
             select: {
-              clothingItems: true,
+              clothingItems: {
+                where: {
+                  status: {
+                    not: "DISPOSED",
+                  },
+                },
+              },
               outfits: true,
             },
           },
           clothingItems: {
+            where: {
+              status: {
+                not: "DISPOSED",
+              },
+            },
             select: {
               id: true,
               evaluations: {
@@ -102,18 +116,45 @@ export async function GET() {
     ]);
 
     // ユーザーごとの詳細状態を計算
-    const usersWithStatus = usersWithDetails.map((user) => {
+    interface UserWithDetails {
+      id: string;
+      name: string | null;
+      email: string;
+      createdAt: Date;
+      userProfile: {
+        profileImageUrl: string | null;
+        height: number | null;
+        age: number | null;
+      } | null;
+      _count: {
+        clothingItems: number;
+        outfits: number;
+      };
+      clothingItems: {
+        id: string;
+        evaluations: { id: string }[];
+      }[];
+      outfits: {
+        id: string;
+        createdAt: Date;
+      }[];
+      receivedRecommendations: {
+        id: string;
+        status: string;
+      }[];
+    }
+
+    const usersWithStatus = usersWithDetails.map((user: UserWithDetails) => {
       const unevaluatedItems = user.clothingItems.filter(
-        (item: { evaluations: { id: string }[] }) =>
-          item.evaluations.length === 0
+        (item) => item.evaluations.length === 0
       ).length;
 
       const pendingRecommendations = user.receivedRecommendations.filter(
-        (rec: { status: string }) => rec.status === "pending"
+        (rec) => rec.status === "pending"
       ).length;
 
       const completedRecommendations = user.receivedRecommendations.filter(
-        (rec: { status: string }) => rec.status === "purchased"
+        (rec) => rec.status === "purchased"
       ).length;
 
       const lastOutfitDate = user.outfits[0]?.createdAt;
@@ -157,8 +198,30 @@ export async function GET() {
       };
     });
 
+    interface UserStatus {
+      id: string;
+      name: string;
+      email: string;
+      profileImageUrl: string | null | undefined;
+      height: number | null | undefined;
+      age: number | null | undefined;
+      itemsCount: number;
+      outfitsCount: number;
+      unevaluatedItems: number;
+      pendingRecommendations: number;
+      completedRecommendations: number;
+      lastActivity: string;
+      lastOutfitDate: string | undefined;
+      daysSinceLastOutfit: number | null;
+      priorityLevel: "high" | "medium" | "low";
+      priorityScore: number;
+      needsAttention: boolean;
+    }
+
     // 優先度順にソート
-    usersWithStatus.sort((a, b) => b.priorityScore - a.priorityScore);
+    usersWithStatus.sort(
+      (a: UserStatus, b: UserStatus) => b.priorityScore - a.priorityScore
+    );
 
     const dashboardData = {
       totalUsers,
@@ -168,12 +231,14 @@ export async function GET() {
       users: usersWithStatus,
       summary: {
         highPriorityUsers: usersWithStatus.filter(
-          (u) => u.priorityLevel === "high"
+          (u: UserStatus) => u.priorityLevel === "high"
         ).length,
-        usersNeedingAttention: usersWithStatus.filter((u) => u.needsAttention)
-          .length,
-        usersWithoutOutfits: usersWithStatus.filter((u) => u.outfitsCount === 0)
-          .length,
+        usersNeedingAttention: usersWithStatus.filter(
+          (u: UserStatus) => u.needsAttention
+        ).length,
+        usersWithoutOutfits: usersWithStatus.filter(
+          (u: UserStatus) => u.outfitsCount === 0
+        ).length,
         totalUnevaluatedItems,
       },
     };

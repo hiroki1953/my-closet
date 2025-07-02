@@ -24,7 +24,11 @@ export async function GET() {
         _count: {
           select: {
             clothingItems: {
-              where: { status: "ACTIVE" },
+              where: {
+                status: {
+                  not: "DISPOSED",
+                },
+              },
             },
             outfits: true,
           },

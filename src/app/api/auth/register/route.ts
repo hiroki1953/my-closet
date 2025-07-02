@@ -72,55 +72,10 @@ export async function POST(request: NextRequest) {
 
     // ユーザー作成
     console.log("👤 Creating user in database...");
-    // User creation interfaces
-    interface UserCreateData {
-      email: string;
-      passwordHash: string;
-      name: string;
-      role: "USER" | "STYLIST";
-    }
-
-    interface UserSelectFields {
-      id: true;
-      email: true;
-      name: true;
-      role: true;
-      createdAt: true;
-    }
-
-    interface CreatedUser {
-      id: string;
-      email: string;
-      name: string;
-      role: "USER" | "STYLIST";
-      createdAt: Date;
-    }
-
-    interface UserProfileCreateData {
-      userId: string;
-      isPublic: boolean;
-    }
-
-    interface TransactionClient {
-      user: {
-        create: (params: {
-          data: UserCreateData;
-          select: UserSelectFields;
-        }) => Promise<CreatedUser>;
-      };
-      userProfile: {
-        create: (params: { data: UserProfileCreateData }) => Promise<unknown>;
-      };
-    }
-
-    interface TransactionOptions {
-      timeout: number;
-    }
-
-    const user: CreatedUser = await prisma.$transaction(
-      async (tx: TransactionClient) => {
+    const user = await prisma.$transaction(
+      async (tx) => {
         // トランザクション内でユーザー作成
-        const newUser: CreatedUser = await tx.user.create({
+        const newUser = await tx.user.create({
           data: {
             email,
             passwordHash,
@@ -147,7 +102,7 @@ export async function POST(request: NextRequest) {
             },
           });
           console.log("✅ User profile created");
-        } catch (profileError: unknown) {
+        } catch (profileError) {
           console.warn(
             "⚠️ User profile creation failed (non-critical):",
             profileError
@@ -159,7 +114,7 @@ export async function POST(request: NextRequest) {
       },
       {
         timeout: 10000, // 10秒タイムアウト
-      } as TransactionOptions
+      }
     );
 
     console.log("🎉 User created successfully:", {
