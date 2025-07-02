@@ -23,6 +23,11 @@ const authConfig = {
         }
 
         try {
+          // 本番環境では接続を明示的に管理
+          if (process.env.NODE_ENV === "production") {
+            await prisma.$connect();
+          }
+
           const user = await prisma.user.findUnique({
             where: {
               email: credentials.email as string,
@@ -55,6 +60,15 @@ const authConfig = {
             console.error("Authentication failed for user:", credentials.email);
           }
           return null;
+        } finally {
+          // 本番環境では必ず接続を切断
+          if (process.env.NODE_ENV === "production") {
+            try {
+              await prisma.$disconnect();
+            } catch (disconnectError) {
+              console.error("Failed to disconnect Prisma in auth:", disconnectError);
+            }
+          }
         }
       },
     }),

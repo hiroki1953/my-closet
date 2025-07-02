@@ -38,6 +38,17 @@ export async function POST(request: NextRequest) {
     const { email, password, name, role } = registerSchema.parse(body);
     console.log("✅ Schema validation passed");
 
+    // Prismaクライアントの接続確認
+    console.log("🔗 Testing database connection...");
+    try {
+      await prisma.$connect();
+      await prisma.$queryRaw`SELECT 1`;
+      console.log("✅ Database connection successful");
+    } catch (connectionError) {
+      console.error("❌ Database connection failed:", connectionError);
+      throw new Error("Database connection failed");
+    }
+
     // 既存ユーザーチェック
     console.log("🔍 Checking existing user...");
     const existingUser = await prisma.user.findUnique({
@@ -58,11 +69,6 @@ export async function POST(request: NextRequest) {
     console.log("🔐 Hashing password...");
     const passwordHash = await bcrypt.hash(password, 12);
     console.log("✅ Password hashed successfully");
-
-    // データベース接続テスト
-    console.log("🔗 Testing database connection...");
-    await prisma.$queryRaw`SELECT 1`;
-    console.log("✅ Database connection successful");
 
     // ユーザー作成
     console.log("👤 Creating user in database...");
@@ -120,12 +126,27 @@ export async function POST(request: NextRequest) {
 
     clearTimeout(timeoutId);
 
+    // 本番環境ではリクエスト終了時にPrisma接続を切断
+    if (process.env.NODE_ENV === "production") {
+      await prisma.$disconnect();
+    }
+
     return NextResponse.json({
       message: "ユーザー登録が完了しました",
       user,
     });
   } catch (error) {
     clearTimeout(timeoutId);
+    
+    // エラー時も確実にPrisma接続を切断
+    if (process.env.NODE_ENV === "production") {
+      try {
+        await prisma.$disconnect();
+      } catch (disconnectError) {
+        console.error("⚠️ Failed to disconnect Prisma:", disconnectError);
+      }
+    }
+
     console.error("💥 Registration error details:", {
       name: error instanceof Error ? error.name : "Unknown",
       message: error instanceof Error ? error.message : String(error),
