@@ -56,14 +56,17 @@ export async function POST(request: NextRequest) {
 
     // ユニークなファイル名を生成
     const hash = crypto.createHash("sha256").update(buffer).digest("hex");
-    const fileExtension = file.name.split('.').pop() || 'png';
-    const filename = `profile_${session.user.id}_${hash.substring(0, 8)}.${fileExtension}`;
+    const fileExtension = file.name.split(".").pop() || "png";
+    const filename = `profile_${session.user.id}_${hash.substring(
+      0,
+      8
+    )}.${fileExtension}`;
 
     console.log("📤 Uploading to Supabase Storage:", filename);
 
     // Supabase Storageにアップロード
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
-      .from('profile-images')
+      .from("profile-images")
       .upload(filename, buffer, {
         contentType: file.type,
         upsert: true, // 同じファイル名の場合は上書き
@@ -71,11 +74,14 @@ export async function POST(request: NextRequest) {
 
     if (uploadError) {
       console.error("💥 Supabase upload error:", uploadError);
-      
+
       // バケットが存在しない場合の詳細なエラーメッセージ
-      if (uploadError.message.includes('Bucket not found')) {
+      if (uploadError.message.includes("Bucket not found")) {
         return NextResponse.json(
-          { error: "ストレージバケットが見つかりません。管理者に連絡してください。" },
+          {
+            error:
+              "ストレージバケットが見つかりません。管理者に連絡してください。",
+          },
           { status: 500 }
         );
       }
@@ -90,7 +96,7 @@ export async function POST(request: NextRequest) {
 
     // 公開URLを生成
     const { data: publicUrlData } = supabaseAdmin.storage
-      .from('profile-images')
+      .from("profile-images")
       .getPublicUrl(filename);
 
     const imageUrl = publicUrlData.publicUrl;
