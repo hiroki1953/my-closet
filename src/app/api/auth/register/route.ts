@@ -3,6 +3,11 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
+// 環境変数チェック
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL is not configured");
+}
+
 const registerSchema = z.object({
   email: z.string().email("有効なメールアドレスを入力してください"),
   password: z.string().min(6, "パスワードは6文字以上で入力してください"),
