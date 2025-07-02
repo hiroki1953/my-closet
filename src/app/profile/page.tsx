@@ -67,15 +67,25 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
+        console.log("📡 Fetching profile data...");
         const response = await fetch("/api/user/profile");
+        console.log("📥 Profile fetch response status:", response.status);
+
         if (response.ok) {
           const data = await response.json();
+          console.log("📋 Profile data received:", data);
           if (data.profile) {
             setProfile(data.profile);
+            console.log("✅ Profile state updated");
+          } else {
+            console.log("ℹ️ No profile data found, using empty profile");
           }
+        } else {
+          const errorData = await response.json();
+          console.error("❌ Profile fetch failed:", errorData);
         }
       } catch (error) {
-        console.error("Failed to fetch profile:", error);
+        console.error("💥 Failed to fetch profile:", error);
       } finally {
         setLoading(false);
       }
@@ -89,6 +99,8 @@ export default function ProfilePage() {
   const handleSave = async () => {
     setSaving(true);
     try {
+      console.log("📤 Saving profile data:", profile);
+
       const response = await fetch("/api/user/profile", {
         method: "POST",
         headers: {
@@ -97,13 +109,19 @@ export default function ProfilePage() {
         body: JSON.stringify(profile),
       });
 
+      console.log("📥 Server response status:", response.status);
+
       if (response.ok) {
+        const result = await response.json();
+        console.log("✅ Profile saved successfully:", result);
         alert("プロフィールを保存しました");
       } else {
-        alert("保存に失敗しました");
+        const errorData = await response.json();
+        console.error("❌ Save failed:", errorData);
+        alert(`保存に失敗しました: ${errorData.error || "不明なエラー"}`);
       }
     } catch (error) {
-      console.error("Save error:", error);
+      console.error("💥 Save error:", error);
       alert("保存に失敗しました");
     } finally {
       setSaving(false);
