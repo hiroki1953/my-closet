@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 
 // NODE_ENVが設定されていない場合のデフォルト値
-const nodeEnv = process.env.NODE_ENV || 'development';
+const nodeEnv = process.env.NODE_ENV || "development";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -22,7 +22,7 @@ const getDatabaseUrl = () => {
     url.searchParams.set("pool_timeout", "30");
     return url.toString();
   }
-  
+
   // 開発環境では制限を緩くする
   const url = new URL(baseUrl);
   url.searchParams.set("pgbouncer", "true");
@@ -39,13 +39,6 @@ export const prisma =
         url: getDatabaseUrl(),
       },
     },
-    // 接続タイムアウトの設定
-    __internal: {
-      engine: {
-        queryTimeout: 30000, // 30秒
-        connectTimeout: 5000, // 5秒
-      },
-    },
   });
 
 // 開発環境でのみ接続を再利用
@@ -54,16 +47,16 @@ if (nodeEnv !== "production") {
 }
 
 // アプリケーション終了時のクリーンアップ
-process.on('beforeExit', async () => {
+process.on("beforeExit", async () => {
   await prisma.$disconnect();
 });
 
-process.on('SIGINT', async () => {
+process.on("SIGINT", async () => {
   await prisma.$disconnect();
   process.exit(0);
 });
 
-process.on('SIGTERM', async () => {
+process.on("SIGTERM", async () => {
   await prisma.$disconnect();
   process.exit(0);
 });

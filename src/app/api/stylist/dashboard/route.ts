@@ -269,7 +269,7 @@ export async function GET() {
     return NextResponse.json(dashboardData);
   } catch (error) {
     console.error("Dashboard API error:", error);
-    
+
     // データベース接続エラーの詳細をログに記録
     if (error instanceof Error) {
       console.error("Error details:", {
@@ -278,9 +278,9 @@ export async function GET() {
         name: error.name,
       });
     }
-    
+
     return NextResponse.json(
-      { 
+      {
         error: "Internal server error",
         timestamp: new Date().toISOString(),
       },
