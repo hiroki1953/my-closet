@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase";
-import crypto from "crypto";
 
 export async function POST(request: NextRequest) {
   try {
@@ -54,42 +53,74 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // ファイル拡張子を安全に取得（大文字小文字を正規化）
-    const originalExtension = file.name.split(".").pop()?.toLowerCase() || "";
-    const safeExtension = originalExtension.match(/^(jpg|jpeg|png|webp)$/) ? originalExtension : "png";
+    // ファイル拡張子を安全に取得（MIMEタイプから確実に決定）
+    let safeExtension = "png"; // デフォルト
+    switch (file.type) {
+      case "image/jpeg":
+      case "image/jpg":
+        safeExtension = "jpg";
+        break;
+      case "image/png":
+        safeExtension = "png";
+        break;
+      case "image/webp":
+        safeExtension = "webp";
+        break;
+    }
     
-    // ユニークで安全なファイル名を生成（英数字とハイフン、アンダースコアのみ）
+    // より安全なファイル名を生成（数字とアルファベットのみ）
     const timestamp = Date.now();
-    const hash = crypto.createHash("sha256").update(buffer).digest("hex");
-    const safeUserId = session.user.id.replace(/[^a-zA-Z0-9]/g, ""); // 英数字のみ
-    const filename = `clothing-${safeUserId}-${timestamp}-${hash.substring(0, 8)}.${safeExtension}`;
+    const randomSuffix = Math.random().toString(36).substring(2, 8); // 6文字のランダム文字列
+    const safeUserId = session.user.id.replace(/[^a-zA-Z0-9]/g, "").substring(0, 8); // 8文字に制限
+    
+    // 複数のファイル名パターンを試行する
+    const filenameOptions = [
+      `img${timestamp}${randomSuffix}.${safeExtension}`, // 最もシンプル
+      `clothing${timestamp}.${safeExtension}`, // シンプル2
+      `c${safeUserId}${timestamp}.${safeExtension}`, // ユーザーID含む
+      `clothing${safeUserId}${timestamp}${randomSuffix}.${safeExtension}` // 元の形式
+    ];
 
-    console.log("📤 Uploading to Supabase Storage:", filename);
+    console.log("📤 Trying multiple filename patterns...");
+    console.log("📋 File details:", {
+      originalName: file.name,
+      mimeType: file.type,
+      size: file.size,
+      userId: session.user.id,
+      safeUserId: safeUserId,
+      filenameOptions: filenameOptions
+    });
 
-    // Supabase Storageにアップロード
-    const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
-      .from("clothing-items")
-      .upload(filename, buffer, {
-        contentType: file.type,
-        upsert: false, // 重複しない名前なので上書きしない
-      });
+    // 複数のファイル名パターンを順番に試行
+    let uploadData = null;
+    let finalFilename = "";
+    let lastError = null;
 
-    if (uploadError) {
-      console.error("💥 Supabase upload error:", uploadError);
+    for (const filename of filenameOptions) {
+      console.log(`🔄 Trying filename: ${filename}`);
+      
+      const { data, error } = await supabaseAdmin.storage
+        .from("clothing-items")
+        .upload(filename, buffer, {
+          contentType: file.type,
+          upsert: false,
+        });
 
-      // バケットが存在しない場合の詳細なエラーメッセージ
-      if (uploadError.message.includes("Bucket not found")) {
-        return NextResponse.json(
-          {
-            error:
-              "ストレージバケットが見つかりません。管理者に連絡してください。",
-          },
-          { status: 500 }
-        );
+      if (!error) {
+        uploadData = data;
+        finalFilename = filename;
+        console.log(`✅ Upload successful with filename: ${filename}`);
+        break;
+      } else {
+        console.log(`❌ Failed with filename ${filename}:`, error.message);
+        lastError = error;
       }
+    }
 
+    if (!uploadData || lastError) {
+      console.error("💥 All filename patterns failed. Last error:", lastError);
       return NextResponse.json(
-        { error: `画像のアップロードに失敗しました: ${uploadError.message}` },
+        { error: `すべてのファイル名パターンで失敗しました: ${lastError?.message}` },
         { status: 500 }
       );
     }
@@ -99,7 +130,7 @@ export async function POST(request: NextRequest) {
     // 公開URLを生成
     const { data: publicUrlData } = supabaseAdmin.storage
       .from("clothing-items")
-      .getPublicUrl(filename);
+      .getPublicUrl(finalFilename);
 
     const imageUrl = publicUrlData.publicUrl;
     console.log("🔗 Public URL generated:", imageUrl);
