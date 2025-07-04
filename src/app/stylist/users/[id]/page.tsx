@@ -15,7 +15,7 @@ import Image from "next/image";
 import {
   ShirtIcon,
   SparklesIcon,
-  MessageCircleIcon,
+  ShoppingBagIcon,
   ArrowLeftIcon,
 } from "lucide-react";
 
@@ -54,6 +54,14 @@ interface UserDetail {
     stylistComment: string;
     tips: string;
     createdAt: string;
+    clothingItems: Array<{
+      id: string;
+      imageUrl: string;
+      category: string;
+      color: string;
+      brand: string;
+      description?: string;
+    }>;
   }>;
   _count: {
     clothingItems: number;
@@ -110,124 +118,149 @@ export default function UserDetailPage() {
       <Header currentPage="dashboard" />
 
       <main className="container mx-auto px-4 py-6 md:py-8">
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button asChild variant="outline" size="sm">
-                <Link href="/stylist/users">
-                  <ArrowLeftIcon className="h-4 w-4 mr-2" />
-                  戻る
-                </Link>
-              </Button>
-              <h1 className="text-2xl font-bold text-slate-900">
-                {user.name}さんの詳細
-              </h1>
-            </div>
+        <div className="space-y-4 md:space-y-6">
+          <div className="space-y-3">
+            <Button asChild variant="ghost" size="sm" className="w-fit">
+              <Link href="/stylist/users">
+                <ArrowLeftIcon className="h-4 w-4 mr-2" />
+                戻る
+              </Link>
+            </Button>
+            <h1 className="text-xl md:text-2xl font-bold text-slate-900">
+              {user.name}さんの詳細
+            </h1>
           </div>
 
           {/* ユーザー情報カード */}
           <Card>
             <CardHeader>
-              <div className="flex items-center space-x-4">
-                <Avatar className="h-16 w-16">
-                  <AvatarImage src="" />
-                  <AvatarFallback className="text-lg">
-                    {user.name?.charAt(0) || "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <CardTitle className="text-xl">{user.name}</CardTitle>
-                  <p className="text-slate-600">{user.email}</p>
-                  <p className="text-sm text-slate-500">
-                    登録日:{" "}
-                    {new Date(user.createdAt).toLocaleDateString("ja-JP")}
-                  </p>
+              <div className="space-y-4">
+                {/* アバターと基本情報 */}
+                <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                  <Avatar className="h-16 w-16 mx-auto sm:mx-0">
+                    <AvatarImage src="" />
+                    <AvatarFallback className="text-lg">
+                      {user.name?.charAt(0) || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 text-center sm:text-left">
+                    <CardTitle className="text-lg md:text-xl">
+                      {user.name}
+                    </CardTitle>
+                    <p className="text-slate-600 text-sm md:text-base">
+                      {user.email}
+                    </p>
+                    <p className="text-xs md:text-sm text-slate-500">
+                      登録日:{" "}
+                      {new Date(user.createdAt).toLocaleDateString("ja-JP")}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex space-x-4">
+
+                {/* 統計情報 */}
+                <div className="flex justify-center sm:justify-end space-x-6 md:space-x-8">
                   <div className="text-center">
                     <div className="flex items-center justify-center mb-1">
-                      <ShirtIcon className="h-5 w-5 text-slate-500 mr-1" />
-                      <span className="text-2xl font-bold text-slate-900">
+                      <ShirtIcon className="h-4 w-4 md:h-5 md:w-5 text-slate-500 mr-1" />
+                      <span className="text-xl md:text-2xl font-bold text-slate-900">
                         {user._count.clothingItems}
                       </span>
                     </div>
-                    <p className="text-sm text-slate-600">アイテム</p>
+                    <p className="text-xs md:text-sm text-slate-600">
+                      アイテム
+                    </p>
                   </div>
                   <div className="text-center">
                     <div className="flex items-center justify-center mb-1">
-                      <SparklesIcon className="h-5 w-5 text-slate-500 mr-1" />
-                      <span className="text-2xl font-bold text-slate-900">
+                      <SparklesIcon className="h-4 w-4 md:h-5 md:w-5 text-slate-500 mr-1" />
+                      <span className="text-xl md:text-2xl font-bold text-slate-900">
                         {user._count.outfits}
                       </span>
                     </div>
-                    <p className="text-sm text-slate-600">コーデ</p>
+                    <p className="text-xs md:text-sm text-slate-600">コーデ</p>
                   </div>
                 </div>
               </div>
             </CardHeader>
 
             {user.profile && (
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                   {user.profile.age && (
                     <div>
-                      <span className="text-sm font-medium text-slate-700">
+                      <span className="text-xs md:text-sm font-medium text-slate-700">
                         年齢
                       </span>
-                      <p className="text-slate-900">{user.profile.age}歳</p>
+                      <p className="text-sm md:text-base text-slate-900">
+                        {user.profile.age}歳
+                      </p>
                     </div>
                   )}
                   {user.profile.height && (
                     <div>
-                      <span className="text-sm font-medium text-slate-700">
+                      <span className="text-xs md:text-sm font-medium text-slate-700">
                         身長
                       </span>
-                      <p className="text-slate-900">{user.profile.height}cm</p>
+                      <p className="text-sm md:text-base text-slate-900">
+                        {user.profile.height}cm
+                      </p>
                     </div>
                   )}
                   {user.profile.weight && (
                     <div>
-                      <span className="text-sm font-medium text-slate-700">
+                      <span className="text-xs md:text-sm font-medium text-slate-700">
                         体重
                       </span>
-                      <p className="text-slate-900">{user.profile.weight}kg</p>
+                      <p className="text-sm md:text-base text-slate-900">
+                        {user.profile.weight}kg
+                      </p>
                     </div>
                   )}
                   {user.profile.style && (
                     <div>
-                      <span className="text-sm font-medium text-slate-700">
+                      <span className="text-xs md:text-sm font-medium text-slate-700">
                         好みのスタイル
                       </span>
-                      <p className="text-slate-900">{user.profile.style}</p>
+                      <p className="text-sm md:text-base text-slate-900">
+                        {user.profile.style}
+                      </p>
                     </div>
                   )}
                   {user.profile.bodyType && (
                     <div>
-                      <span className="text-sm font-medium text-slate-700">
+                      <span className="text-xs md:text-sm font-medium text-slate-700">
                         体型
                       </span>
-                      <p className="text-slate-900">{user.profile.bodyType}</p>
+                      <p className="text-sm md:text-base text-slate-900">
+                        {user.profile.bodyType}
+                      </p>
                     </div>
                   )}
                   {user.profile.lifestyle && (
                     <div>
-                      <span className="text-sm font-medium text-slate-700">
+                      <span className="text-xs md:text-sm font-medium text-slate-700">
                         ライフスタイル
                       </span>
-                      <p className="text-slate-900">{user.profile.lifestyle}</p>
+                      <p className="text-sm md:text-base text-slate-900">
+                        {user.profile.lifestyle}
+                      </p>
                     </div>
                   )}
                 </div>
                 {user.profile.favoriteColors &&
                   user.profile.favoriteColors.length > 0 && (
-                    <div className="mt-4">
-                      <span className="text-sm font-medium text-slate-700 block mb-2">
+                    <div className="mt-3 md:mt-4">
+                      <span className="text-xs md:text-sm font-medium text-slate-700 block mb-2">
                         好きな色
                       </span>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-1 md:gap-2">
                         {user.profile.favoriteColors.map(
                           (color: string, index: number) => (
-                            <Badge key={index} variant="secondary">
+                            <Badge
+                              key={index}
+                              variant="secondary"
+                              className="text-xs"
+                            >
                               {color}
                             </Badge>
                           )
@@ -248,9 +281,11 @@ export default function UserDetailPage() {
             </TabsList>
 
             <TabsContent value="closet" className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">クローゼット</h3>
-                <Button asChild size="sm">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <h3 className="text-base md:text-lg font-semibold">
+                  クローゼット
+                </h3>
+                <Button asChild className="w-full sm:w-auto h-12 sm:h-10">
                   <Link href={`/stylist/users/${userId}/closet`}>
                     詳細を確認
                   </Link>
@@ -303,58 +338,114 @@ export default function UserDetailPage() {
             </TabsContent>
 
             <TabsContent value="outfits" className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">コーディネート</h3>
-                <Button asChild size="sm">
-                  <Link href={`/stylist/users/${userId}/outfits/create`}>
-                    新しいコーデを作成
-                  </Link>
-                </Button>
+              <div className="space-y-3">
+                <h3 className="text-base md:text-lg font-semibold">
+                  コーディネート
+                </h3>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="flex-1 sm:flex-none h-12 sm:h-10"
+                  >
+                    <Link href={`/stylist/users/${userId}/outfits`}>
+                      一覧を見る
+                    </Link>
+                  </Button>
+                  <Button asChild className="flex-1 sm:flex-none h-12 sm:h-10">
+                    <Link href={`/stylist/users/${userId}/outfits/create`}>
+                      <span className="sm:hidden">コーデ作成</span>
+                      <span className="hidden sm:inline">
+                        新しいコーデを作成
+                      </span>
+                    </Link>
+                  </Button>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {user.outfits.map((outfit) => (
-                  <Card key={outfit.id}>
+                  <Card
+                    key={outfit.id}
+                    className="hover:shadow-lg transition-shadow"
+                  >
                     <CardHeader>
                       <CardTitle className="text-lg">{outfit.title}</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <p className="text-slate-700 mb-2">
-                        {outfit.stylistComment}
-                      </p>
-                      {outfit.tips && (
-                        <p className="text-sm text-slate-600 italic">
-                          💡 {outfit.tips}
+                    <CardContent className="space-y-4">
+                      <div>
+                        <p className="text-slate-700 mb-2">
+                          {outfit.stylistComment}
                         </p>
-                      )}
-                      <p className="text-xs text-slate-500 mt-2">
-                        作成日:{" "}
-                        {new Date(outfit.createdAt).toLocaleDateString("ja-JP")}
-                      </p>
+                        {outfit.tips && (
+                          <p className="text-sm text-slate-600 italic">
+                            💡 {outfit.tips}
+                          </p>
+                        )}
+                        <p className="text-xs text-slate-500 mt-2">
+                          作成日:{" "}
+                          {new Date(outfit.createdAt).toLocaleDateString(
+                            "ja-JP"
+                          )}
+                        </p>
+                      </div>
+
+                      {/* アクションボタン */}
+                      <div className="flex gap-2 mt-4">
+                        <Button asChild variant="outline" size="sm">
+                          <Link
+                            href={`/stylist/users/${userId}/outfits/${outfit.id}`}
+                          >
+                            詳細を見る
+                          </Link>
+                        </Button>
+                        <Button asChild variant="outline" size="sm">
+                          <Link
+                            href={`/stylist/users/${userId}/outfits/${outfit.id}/edit`}
+                          >
+                            編集
+                          </Link>
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
               </div>
+
+              {user.outfits.length === 0 && (
+                <div className="text-center py-8">
+                  <p className="text-slate-600 mb-4">
+                    まだコーディネートがありません
+                  </p>
+                  <Button asChild>
+                    <Link href={`/stylist/users/${userId}/outfits/create`}>
+                      最初のコーディネートを作成
+                    </Link>
+                  </Button>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="actions" className="space-y-4">
-              <h3 className="text-lg font-semibold">スタイリングアクション</h3>
+              <h3 className="text-base md:text-lg font-semibold">
+                スタイリングアクション
+              </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg flex items-center">
-                      <ShirtIcon className="h-5 w-5 mr-2" />
+                    <CardTitle className="text-base md:text-lg flex items-center">
+                      <ShirtIcon className="h-4 w-4 md:h-5 md:w-5 mr-2" />
                       アイテム評価
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-slate-600 mb-4">
+                    <p className="text-sm md:text-base text-slate-600 mb-4">
                       ユーザーの服をチェックして、必要・不要・キープの評価を行います。
                     </p>
-                    <Button asChild className="w-full">
-                      <Link href={`/stylist/users/${userId}/evaluations`}>
-                        アイテムを評価する
+                    <Button asChild className="w-full h-12 sm:h-10">
+                      <Link href={`/stylist/users/${userId}/closet`}>
+                        クローゼットで評価する
                       </Link>
                     </Button>
                   </CardContent>
@@ -362,16 +453,16 @@ export default function UserDetailPage() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg flex items-center">
-                      <SparklesIcon className="h-5 w-5 mr-2" />
+                    <CardTitle className="text-base md:text-lg flex items-center">
+                      <SparklesIcon className="h-4 w-4 md:h-5 md:w-5 mr-2" />
                       コーディネート作成
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-slate-600 mb-4">
+                    <p className="text-sm md:text-base text-slate-600 mb-4">
                       ユーザーの服を組み合わせて、新しいコーディネートを提案します。
                     </p>
-                    <Button asChild className="w-full">
+                    <Button asChild className="w-full h-12 sm:h-10">
                       <Link href={`/stylist/users/${userId}/outfits/create`}>
                         コーデを作成する
                       </Link>
@@ -381,16 +472,16 @@ export default function UserDetailPage() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg flex items-center">
-                      <MessageCircleIcon className="h-5 w-5 mr-2" />
+                    <CardTitle className="text-base md:text-lg flex items-center">
+                      <ShoppingBagIcon className="h-4 w-4 md:h-5 md:w-5 mr-2" />
                       購入推奨
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-slate-600 mb-4">
+                    <p className="text-sm md:text-base text-slate-600 mb-4">
                       ユーザーに必要なアイテムの購入を推奨します。
                     </p>
-                    <Button asChild className="w-full">
+                    <Button asChild className="w-full h-12 sm:h-10">
                       <Link href={`/stylist/users/${userId}/recommendations`}>
                         購入推奨を管理
                       </Link>

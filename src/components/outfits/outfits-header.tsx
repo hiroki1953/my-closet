@@ -1,6 +1,12 @@
 // コーディネート提案ヘッダー（サーバーコンポーネント）
 
-export function OutfitsHeader() {
+interface OutfitsHeaderProps {
+  stylistName?: string;
+}
+
+export function OutfitsHeader({
+  stylistName = "スタイリスト",
+}: OutfitsHeaderProps) {
   return (
     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 md:mb-8 space-y-4 sm:space-y-0">
       <div>
@@ -8,7 +14,7 @@ export function OutfitsHeader() {
           コーディネート提案
         </h2>
         <p className="text-muted-foreground text-sm md:text-base">
-          うーちゃんからのパーソナライズされたスタイリング提案
+          {stylistName}からのパーソナライズされたスタイリング提案
         </p>
       </div>
       <div className="flex items-center space-x-3">
@@ -18,7 +24,7 @@ export function OutfitsHeader() {
         <div>
           <p className="text-xs md:text-sm text-muted-foreground">提案者</p>
           <p className="text-sm md:text-base font-semibold text-accent">
-            うーちゃん
+            {stylistName}
           </p>
         </div>
       </div>

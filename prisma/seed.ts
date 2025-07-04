@@ -1,7 +1,13 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
+});
 
 async function main() {
   console.log("🌱 シードデータを作成中...");
@@ -10,42 +16,37 @@ async function main() {
   const hashedPassword = await bcrypt.hash("password123", 10);
 
   // 通常ユーザーの作成
-  const user = await prisma.user.upsert({
-    where: { email: "test@example.com" },
-    update: {},
-    create: {
+  const user = await prisma.user.create({
+    data: {
       email: "test@example.com",
       passwordHash: hashedPassword,
       name: "太郎",
       role: "USER",
-      profile: {
-        height: 175,
-        weight: 70,
-        age: 28,
-        style: "カジュアル",
-        favoriteColors: ["ネイビー", "ホワイト", "グレー"],
-        bodyType: "普通",
-        lifestyle: "ビジネスマン",
-      },
     },
   });
 
   console.log(`✅ ユーザー作成: ${user.email}`);
 
+  // ユーザープロフィールの作成
+  await prisma.userProfile.create({
+    data: {
+      userId: user.id,
+      height: 175,
+      weight: 70,
+      age: 28,
+      stylePreference: "カジュアル",
+      bodyType: "STRAIGHT",
+      lifestyle: "ビジネスマン",
+    },
+  });
+
   // スタイリスト（うーちゃん）の作成
-  const stylist = await prisma.user.upsert({
-    where: { email: "stylist@senseup.com" },
-    update: {},
-    create: {
+  const stylist = await prisma.user.create({
+    data: {
       email: "stylist@senseup.com",
       passwordHash: hashedPassword,
       name: "うーちゃん",
       role: "STYLIST",
-      profile: {
-        experience: "5年",
-        speciality: "メンズカジュアル",
-        certification: "スタイリスト認定",
-      },
     },
   });
 
@@ -148,7 +149,7 @@ async function main() {
         stylistComment: outfit.stylistComment,
         tips: outfit.tips,
         userId: user.id,
-        createdById: user.id, // うーちゃんとして
+        createdById: stylist.id, // スタイリストが作成
       },
     });
 
@@ -196,15 +197,61 @@ async function main() {
       data: {
         content: message.content,
         senderType: message.senderType as "USER" | "STYLIST",
-        fromUserId: message.senderType === "USER" ? user.id : user.id, // For demo, both are same user
-        toUserId: user.id,
+        fromUserId: message.senderType === "USER" ? user.id : stylist.id,
+        toUserId: message.senderType === "USER" ? stylist.id : user.id,
       },
     });
     console.log(`💬 メッセージ作成: ${message.senderType}`);
   }
 
+  // サンプル購入推奨の作成
+  const purchaseRecommendations = [
+    {
+      itemType: "ライトアウター",
+      description:
+        "春秋に使えるテーラードジャケット。ネイビーまたはグレーがおすすめです。",
+      reason:
+        "現在のワードローブにアウターが少なく、ビジネスカジュアルシーンで活用できるアイテムが必要です。",
+      productUrl: "https://www.uniqlo.com/jp/ja/products/E454160-000",
+      priority: "HIGH" as const,
+      status: "PENDING" as const,
+    },
+    {
+      itemType: "ニットセーター",
+      description:
+        "薄手のVネックニット。グレーまたはネイビーの無地がおすすめです。",
+      reason:
+        "寒い季節のインナーとして、また一枚で着てもおしゃれな印象を与えられます。",
+      productUrl: "https://www.uniqlo.com/jp/ja/products/E454157-000",
+      priority: "MEDIUM" as const,
+      status: "PENDING" as const,
+    },
+    {
+      itemType: "腕時計",
+      description:
+        "シンプルなデザインの腕時計。シルバーまたはブラックの文字盤がおすすめです。",
+      reason:
+        "アクセサリーを取り入れることで、コーディネートに洗練された印象をプラスできます。",
+      productUrl: "https://www.casio.com/jp/watches/casio/mtp-1183a-7a",
+      priority: "LOW" as const,
+      status: "PENDING" as const,
+    },
+  ];
+
+  for (const recommendation of purchaseRecommendations) {
+    await prisma.purchaseRecommendation.create({
+      data: {
+        ...recommendation,
+        userId: user.id,
+        stylistId: stylist.id,
+      },
+    });
+    console.log(`🛍️ 購入推奨作成: ${recommendation.itemType}`);
+  }
+
   console.log("🎉 シードデータの作成が完了しました！");
   console.log("📧 テストユーザー: test@example.com");
+  console.log("📧 スタイリスト: stylist@senseup.com");
   console.log("🔑 パスワード: password123");
 }
 

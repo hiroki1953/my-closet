@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-export function AddHeader() {
+interface AddHeaderProps {
+  stylistName?: string;
+}
+
+export function AddHeader({ stylistName = "スタイリスト" }: AddHeaderProps) {
   return (
     <div className="mb-8">
       <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-4">
@@ -19,7 +23,8 @@ export function AddHeader() {
         新しい服を追加
       </h2>
       <p className="text-muted-foreground text-sm md:text-base">
-        うーちゃんがより良いコーディネートを提案できるよう、詳細な情報を入力してください
+        {stylistName}
+        がより良いコーディネートを提案できるよう、詳細な情報を入力してください
       </p>
     </div>
   );

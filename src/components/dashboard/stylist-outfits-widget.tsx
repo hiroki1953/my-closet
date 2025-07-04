@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StarIcon, SparklesIcon } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
+import { OutfitVisualDisplay } from "@/components/outfits/outfit-visual-display";
+import { useStylist } from "@/lib/hooks/use-stylist";
 
 interface ClothingItem {
   id: string;
@@ -36,6 +37,7 @@ interface StylistOutfitsWidgetProps {
 export function StylistOutfitsWidget({ limit = 2 }: StylistOutfitsWidgetProps) {
   const [outfits, setOutfits] = useState<StylistOutfit[]>([]);
   const [loading, setLoading] = useState(true);
+  const { getStylistName } = useStylist();
 
   useEffect(() => {
     const fetchStylistOutfits = async () => {
@@ -67,7 +69,7 @@ export function StylistOutfitsWidget({ limit = 2 }: StylistOutfitsWidgetProps) {
         <CardHeader>
           <CardTitle className="flex items-center">
             <SparklesIcon className="h-5 w-5 mr-2" />
-            うーちゃんからの提案
+            {getStylistName()}からの提案
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -98,7 +100,7 @@ export function StylistOutfitsWidget({ limit = 2 }: StylistOutfitsWidgetProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center">
             <SparklesIcon className="h-5 w-5 mr-2" />
-            うーちゃんからの提案
+            {getStylistName()}からの提案
           </CardTitle>
           <Badge variant="secondary" className="bg-blue-100 text-blue-800">
             <StarIcon className="h-3 w-3 mr-1" />
@@ -112,7 +114,7 @@ export function StylistOutfitsWidget({ limit = 2 }: StylistOutfitsWidgetProps) {
             <SparklesIcon className="h-12 w-12 text-slate-300 mx-auto mb-4" />
             <p className="text-slate-500">まだ提案はありません</p>
             <p className="text-sm text-slate-400 mt-1">
-              うーちゃんからのコーディネート提案をお待ちください
+              {getStylistName()}からのコーディネート提案をお待ちください
             </p>
           </div>
         ) : (
@@ -123,20 +125,14 @@ export function StylistOutfitsWidget({ limit = 2 }: StylistOutfitsWidgetProps) {
                   <h3 className="font-semibold text-slate-900 mb-2">
                     {outfit.title}
                   </h3>
-                  <div className="grid grid-cols-4 gap-2 mb-3">
-                    {outfit.clothingItems.slice(0, 4).map((item) => (
-                      <div
-                        key={item.id}
-                        className="aspect-square relative rounded-md overflow-hidden bg-slate-100"
-                      >
-                        <Image
-                          src={item.imageUrl}
-                          alt={item.category}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                    ))}
+
+                  {/* コーディネート視覚表示 */}
+                  <div className="flex justify-center mb-3">
+                    <OutfitVisualDisplay
+                      items={outfit.clothingItems}
+                      size="sm"
+                      showLabels={false}
+                    />
                   </div>
                 </div>
 

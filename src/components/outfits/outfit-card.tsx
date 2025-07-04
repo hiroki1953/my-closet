@@ -1,7 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { OutfitVisualDisplay } from "./outfit-visual-display";
 
 interface ClothingItem {
   id: string;
@@ -35,39 +35,18 @@ export function OutfitCard({
   outfit,
   showStylistInfo = false,
 }: OutfitCardProps) {
-  const displayItems = outfit.clothingItems.slice(0, 4);
-  const hasMoreItems = outfit.clothingItems.length > 4;
-
   return (
     <Link href={`/outfits/${outfit.id}`}>
       <Card className="group hover:shadow-lg transition-all duration-200 cursor-pointer border-0 shadow-sm">
         <CardContent className="p-0">
-          {/* 画像グリッド */}
-          <div className="aspect-square relative bg-white rounded-t-lg overflow-hidden">
-            <div className="grid grid-cols-2 gap-1 p-2 h-full">
-              {displayItems.map((item, index) => (
-                <div
-                  key={item.id}
-                  className={`relative rounded-md overflow-hidden bg-gray-100 ${
-                    index === 3 && hasMoreItems ? "relative" : ""
-                  }`}
-                >
-                  <Image
-                    src={item.imageUrl}
-                    alt={`${item.category} - ${item.color}`}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  {index === 3 && hasMoreItems && (
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                      <span className="text-white text-sm font-medium">
-                        +{outfit.clothingItems.length - 4}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+          {/* コーディネート視覚表示 */}
+          <div className="p-4 bg-white rounded-t-lg">
+            <OutfitVisualDisplay
+              items={outfit.clothingItems}
+              size="sm"
+              showLabels={false}
+              className="mx-auto"
+            />
           </div>
 
           {/* コンテンツ */}

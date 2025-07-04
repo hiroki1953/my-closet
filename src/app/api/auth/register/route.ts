@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 
 // 環境変数チェック
 if (!process.env.DATABASE_URL) {
@@ -13,6 +14,7 @@ const registerSchema = z.object({
   password: z.string().min(6, "パスワードは6文字以上で入力してください"),
   name: z.string().min(1, "名前を入力してください"),
   role: z.enum(["USER", "STYLIST"]).optional().default("USER"),
+  stylistId: z.string().optional(), // 担当スタイリストのID
 });
 
 export async function POST(request: NextRequest) {
@@ -35,8 +37,29 @@ export async function POST(request: NextRequest) {
       role: body.role,
     });
 
-    const { email, password, name, role } = registerSchema.parse(body);
+    const { email, password, name, role, stylistId } =
+      registerSchema.parse(body);
     console.log("✅ Schema validation passed");
+
+    // スタイリストIDが指定されている場合は、そのスタイリストが存在するかチェック
+    if (stylistId) {
+      console.log("🔍 Checking stylist exists...");
+      const stylist = await prisma.user.findFirst({
+        where: {
+          id: stylistId,
+          role: "STYLIST",
+        },
+      });
+
+      if (!stylist) {
+        console.log("❌ Stylist not found:", stylistId);
+        return NextResponse.json(
+          { error: "指定されたスタイリストが見つかりません" },
+          { status: 400 }
+        );
+      }
+      console.log("✅ Stylist found:", stylist.name);
+    }
 
     // Prismaクライアントの接続確認
     console.log("🔗 Testing database connection...");
@@ -73,7 +96,7 @@ export async function POST(request: NextRequest) {
     // ユーザー作成
     console.log("👤 Creating user in database...");
     const user = await prisma.$transaction(
-      async (tx) => {
+      async (tx: Prisma.TransactionClient) => {
         // トランザクション内でユーザー作成
         const newUser = await tx.user.create({
           data: {
@@ -81,12 +104,14 @@ export async function POST(request: NextRequest) {
             passwordHash,
             name,
             role,
+            assignedStylistId: role === "USER" ? stylistId : null, // 一般ユーザーの場合のみスタイリストを割り当て
           },
           select: {
             id: true,
             email: true,
             name: true,
             role: true,
+            assignedStylistId: true,
             createdAt: true,
           },
         });

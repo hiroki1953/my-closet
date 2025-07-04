@@ -19,9 +19,13 @@ interface Outfit {
 
 interface OutfitsSectionProps {
   outfits: Outfit[];
+  stylistName?: string;
 }
 
-export function OutfitsSection({ outfits }: OutfitsSectionProps) {
+export function OutfitsSection({
+  outfits,
+  stylistName = "スタイリスト",
+}: OutfitsSectionProps) {
   if (outfits.length > 0) {
     return (
       <Card>
@@ -33,7 +37,7 @@ export function OutfitsSection({ outfits }: OutfitsSectionProps) {
             </Button>
           </CardTitle>
           <CardDescription>
-            うーちゃんがあなたのために厳選したコーディネート
+            {stylistName}があなたのために厳選したコーディネート
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -90,7 +94,7 @@ export function OutfitsSection({ outfits }: OutfitsSectionProps) {
 
                   <p className="text-sm text-muted-foreground mb-3 line-clamp-3">
                     {outfit.stylistComment ||
-                      "うーちゃんからの特別な提案です✨"}
+                      `${stylistName}からの特別な提案です✨`}
                   </p>
 
                   <div className="flex items-center justify-between">
@@ -131,7 +135,7 @@ export function OutfitsSection({ outfits }: OutfitsSectionProps) {
             <span className="text-2xl">👩‍💼</span>
           </div>
           <h3 className="text-lg font-semibold text-primary mb-2">
-            うーちゃんがコーディネートを準備中
+            {stylistName}がコーディネートを準備中
           </h3>
           <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
             アイテムを追加すると、あなただけの特別なコーディネートを提案します！

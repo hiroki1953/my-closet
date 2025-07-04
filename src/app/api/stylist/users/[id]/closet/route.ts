@@ -15,9 +15,12 @@ export async function GET(
 
     const { id: userId } = await params;
 
-    // ユーザー情報を取得
+    // ユーザー情報を取得（担当スタイリストかチェック）
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: {
+        id: userId,
+        assignedStylistId: session.user.id, // 担当スタイリストかチェック
+      },
       include: {
         userProfile: true,
       },
@@ -50,31 +53,38 @@ export async function GET(
     });
 
     // カテゴリ別に集計
-    const itemsByCategory = clothingItems.reduce((acc, item) => {
-      if (!acc[item.category]) {
-        acc[item.category] = [];
-      }
-      acc[item.category].push(item);
-      return acc;
-    }, {} as Record<string, typeof clothingItems>);
+    const itemsByCategory = clothingItems.reduce(
+      (
+        acc: Record<string, typeof clothingItems>,
+        item: (typeof clothingItems)[0]
+      ) => {
+        if (!acc[item.category]) {
+          acc[item.category] = [];
+        }
+        acc[item.category].push(item);
+        return acc;
+      },
+      {} as Record<string, typeof clothingItems>
+    );
 
     // 評価状況の集計
     const evaluationStats = {
       total: clothingItems.length,
-      evaluated: clothingItems.filter((item) => item.evaluations.length > 0)
-        .length,
+      evaluated: clothingItems.filter(
+        (item: (typeof clothingItems)[0]) => item.evaluations.length > 0
+      ).length,
       necessary: clothingItems.filter(
-        (item) =>
+        (item: (typeof clothingItems)[0]) =>
           item.evaluations.length > 0 &&
           item.evaluations[0].evaluation === "NECESSARY"
       ).length,
       unnecessary: clothingItems.filter(
-        (item) =>
+        (item: (typeof clothingItems)[0]) =>
           item.evaluations.length > 0 &&
           item.evaluations[0].evaluation === "UNNECESSARY"
       ).length,
       keep: clothingItems.filter(
-        (item) =>
+        (item: (typeof clothingItems)[0]) =>
           item.evaluations.length > 0 &&
           item.evaluations[0].evaluation === "KEEP"
       ).length,

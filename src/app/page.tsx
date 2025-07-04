@@ -45,7 +45,7 @@ export default async function Home() {
               href="#about"
               className="text-muted-foreground hover:text-primary transition-colors"
             >
-              うーちゃんとは
+              スタイリストとは
             </Link>
           </nav>
           <div className="flex space-x-3">
@@ -66,7 +66,7 @@ export default async function Home() {
             variant="secondary"
             className="mb-6 bg-accent/10 text-accent border-accent/20"
           >
-            うーちゃんがあなたの専属スタイリスト
+            専属スタイリストがサポート
           </Badge>
           <h1 className="text-5xl md:text-6xl font-bold text-primary mb-6 leading-tight">
             もう服選びで
@@ -74,7 +74,7 @@ export default async function Home() {
             <span className="text-accent">悩まない</span>
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-            手持ちの服をアップロードするだけで、専門コーディネーター「うーちゃん」が
+            手持ちの服をアップロードするだけで、専門コーディネーターが
             <br />
             あなたにぴったりのコーディネートを提案します
           </p>
@@ -116,7 +116,7 @@ export default async function Home() {
             </CardHeader>
             <CardContent className="text-center">
               <CardDescription className="text-base leading-relaxed">
-                うーちゃんが毎日のコーディネートを考えるので、
+                専属スタイリストが毎日のコーディネートを考えるので、
                 あなたは何も悩む必要がありません
               </CardDescription>
             </CardContent>
@@ -153,7 +153,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* うーちゃん紹介セクション */}
+      {/* スタイリスト紹介セクション */}
       <section id="about" className="bg-white py-20">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
@@ -161,7 +161,7 @@ export default async function Home() {
               <span className="text-4xl">👩‍💼</span>
             </div>
             <h2 className="text-4xl font-bold text-primary mb-6">
-              専属スタイリスト「うーちゃん」
+              専属スタイリストサービス
             </h2>
             <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
               あなた専用のコーディネーターとして、手持ちの服から最適な組み合わせを提案。

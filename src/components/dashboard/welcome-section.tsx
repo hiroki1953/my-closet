@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useStylist } from "@/lib/hooks/use-stylist";
 
 interface WelcomeSectionProps {
   userName: string | null | undefined;
@@ -21,6 +22,7 @@ interface ClothingStats {
 
 export function WelcomeSection({ userName }: WelcomeSectionProps) {
   const [stats, setStats] = useState<ClothingStats | null>(null);
+  const { getStylistName } = useStylist();
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -51,7 +53,7 @@ export function WelcomeSection({ userName }: WelcomeSectionProps) {
               おかえりなさい、{userName || "ユーザー"}さん！
             </h2>
             <p className="text-muted-foreground text-sm md:text-base">
-              うーちゃんがあなたの専属スタイリストです ✨
+              {getStylistName()}があなたの専属スタイリストです ✨
             </p>
           </div>
         </div>

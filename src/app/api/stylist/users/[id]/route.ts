@@ -21,11 +21,12 @@ export async function GET(
     const params = await context.params;
     const userId = params.id;
 
-    // ユーザーの詳細情報を取得
+    // ユーザーの詳細情報を取得（担当スタイリストかチェック）
     const user = await prisma.user.findUnique({
       where: {
         id: userId,
         role: "USER", // 通常ユーザーのみ
+        assignedStylistId: session.user.id, // 担当スタイリストかチェック
       },
       include: {
         clothingItems: {

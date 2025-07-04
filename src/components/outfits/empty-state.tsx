@@ -8,7 +8,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export function EmptyState() {
+interface EmptyStateProps {
+  stylistName?: string;
+}
+
+export function EmptyState({ stylistName = "スタイリスト" }: EmptyStateProps) {
   return (
     <Card className="text-center py-8 md:py-12">
       <CardContent>
@@ -19,7 +23,8 @@ export function EmptyState() {
           まだコーディネート提案がありません
         </CardTitle>
         <CardDescription className="mb-4 md:mb-6 max-w-md mx-auto text-sm md:text-base">
-          クローゼットにアイテムを追加すると、うーちゃんがあなたにぴったりのコーディネートを提案します
+          クローゼットにアイテムを追加すると、{stylistName}
+          があなたにぴったりのコーディネートを提案します
         </CardDescription>
         <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center">
           <Button asChild>

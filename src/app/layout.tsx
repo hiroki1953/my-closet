@@ -9,9 +9,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "My Closet（マイクロ） - うーちゃんがあなたの専属スタイリスト",
+  title: "My Closet（マイクロ） - 専属スタイリストがサポート",
   description:
-    "20-30代男性向けのクローゼット管理アプリ。うーちゃんがパーソナライズされたコーディネート提案をします。",
+    "20-30代男性向けのクローゼット管理アプリ。専属スタイリストがパーソナライズされたコーディネート提案をします。",
   keywords: [
     "ファッション",
     "コーディネート",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   authors: [{ name: "My Closet Team" }],
   robots: "index, follow",
   openGraph: {
-    title: "My Closet（マイクロ） - うーちゃんがあなたの専属スタイリスト",
+    title: "My Closet（マイクロ） - 専属スタイリストがサポート",
     description: "20-30代男性向けのクローゼット管理アプリ",
     type: "website",
     locale: "ja_JP",

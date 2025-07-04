@@ -7,6 +7,7 @@ import { Header } from "@/components/layout/header";
 import { MainActionSection } from "@/components/dashboard/main-action-section";
 import { WelcomeSection } from "@/components/dashboard/welcome-section";
 import { StylistOutfitsWidget } from "@/components/dashboard/stylist-outfits-widget";
+import { PurchaseRecommendationsWidget } from "@/components/dashboard/purchase-recommendations-widget";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -74,6 +75,7 @@ export default function Dashboard() {
 
           {/* サイドバー */}
           <div className="lg:col-span-1 space-y-6">
+            <PurchaseRecommendationsWidget />
             {profileCompletion && profileCompletion.percentage < 80 && (
               <Card className="border-yellow-200 bg-yellow-50">
                 <CardHeader>

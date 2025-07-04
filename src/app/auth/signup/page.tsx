@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
@@ -14,7 +14,20 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+interface Stylist {
+  id: string;
+  name: string;
+  email: string;
+  profile?: Record<string, unknown>;
+}
 
 export default function SignUp() {
   const [formData, setFormData] = useState({
@@ -23,10 +36,35 @@ export default function SignUp() {
     password: "",
     confirmPassword: "",
     role: "USER" as "USER" | "STYLIST",
+    stylistId: "",
   });
+  const [stylists, setStylists] = useState<Stylist[]>([]);
   const [loading, setLoading] = useState(false);
+  const [stylistsLoading, setStylistsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+
+  // スタイリスト一覧を取得
+  useEffect(() => {
+    const fetchStylists = async () => {
+      if (formData.role === "USER") {
+        setStylistsLoading(true);
+        try {
+          const response = await fetch("/api/stylists");
+          if (response.ok) {
+            const data = await response.json();
+            setStylists(data);
+          }
+        } catch (error) {
+          console.error("スタイリスト取得エラー:", error);
+        } finally {
+          setStylistsLoading(false);
+        }
+      }
+    };
+
+    fetchStylists();
+  }, [formData.role]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
@@ -39,6 +77,14 @@ export default function SignUp() {
     setFormData((prev) => ({
       ...prev,
       role: value,
+      stylistId: value === "STYLIST" ? "" : prev.stylistId, // スタイリストの場合はstylistIdをクリア
+    }));
+  };
+
+  const handleStylistChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      stylistId: value,
     }));
   };
 
@@ -72,6 +118,7 @@ export default function SignUp() {
           email: formData.email,
           password: formData.password,
           role: formData.role,
+          stylistId: formData.role === "USER" ? formData.stylistId : undefined,
         }),
       });
 
@@ -116,9 +163,7 @@ export default function SignUp() {
             </div>
             <h1 className="text-2xl font-bold text-primary">My Closet</h1>
           </div>
-          <p className="text-muted-foreground">
-            うーちゃんがあなたの専属スタイリスト
-          </p>
+          <p className="text-muted-foreground">専属スタイリストがサポート</p>
         </div>
 
         <Card>
@@ -168,12 +213,43 @@ export default function SignUp() {
                   </SelectContent>
                 </Select>
                 <p className="text-sm text-muted-foreground">
-                  {formData.role === "STYLIST" ? 
-                    "スタイリストとしてユーザーのコーディネートを提案します" : 
-                    "コーディネート提案を受けるユーザーとして登録します"
-                  }
+                  {formData.role === "STYLIST"
+                    ? "スタイリストとしてユーザーのコーディネートを提案します"
+                    : "コーディネート提案を受けるユーザーとして登録します"}
                 </p>
               </div>
+
+              {/* スタイリスト選択（一般ユーザーの場合のみ表示） */}
+              {formData.role === "USER" && (
+                <div className="space-y-2">
+                  <Label htmlFor="stylist">担当スタイリスト（任意）</Label>
+                  <Select
+                    value={formData.stylistId}
+                    onValueChange={handleStylistChange}
+                    disabled={stylistsLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={
+                          stylistsLoading
+                            ? "スタイリストを読み込み中..."
+                            : "スタイリストを選択してください（任意）"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {stylists.map((stylist) => (
+                        <SelectItem key={stylist.id} value={stylist.id}>
+                          {stylist.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground">
+                    担当スタイリストを選択すると、その方からコーディネート提案を受けられます
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="password">パスワード</Label>

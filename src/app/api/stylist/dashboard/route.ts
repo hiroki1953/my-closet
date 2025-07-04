@@ -28,16 +28,22 @@ export async function GET() {
       totalRecommendations,
       usersWithDetails,
     ] = await Promise.all([
-      // 総ユーザー数（スタイリスト以外）
+      // このスタイリストが担当するユーザー数
       prisma.user.count({
-        where: { role: "USER" },
+        where: {
+          role: "USER",
+          assignedStylistId: session.user.id,
+        },
       }),
 
-      // 未評価アイテム数（削除されていない、評価されていないアイテム）
+      // 未評価アイテム数（このスタイリストが担当するユーザーの削除されていない、評価されていないアイテム）
       prisma.clothingItem.count({
         where: {
           status: {
             not: "DISPOSED",
+          },
+          user: {
+            assignedStylistId: session.user.id,
           },
           evaluations: {
             none: {},
@@ -45,15 +51,26 @@ export async function GET() {
         },
       }),
 
-      // 総コーディネート数
-      prisma.outfit.count(),
+      // このスタイリストが作成したコーディネート数
+      prisma.outfit.count({
+        where: {
+          createdById: session.user.id,
+        },
+      }),
 
-      // 総購入提案数
-      prisma.purchaseRecommendation.count(),
+      // このスタイリストが作成した購入提案数
+      prisma.purchaseRecommendation.count({
+        where: {
+          stylistId: session.user.id,
+        },
+      }),
 
-      // ユーザー詳細情報
+      // このスタイリストが担当するユーザー詳細情報
       prisma.user.findMany({
-        where: { role: "USER" },
+        where: {
+          role: "USER",
+          assignedStylistId: session.user.id,
+        },
         select: {
           id: true,
           name: true,
@@ -87,6 +104,9 @@ export async function GET() {
             select: {
               id: true,
               evaluations: {
+                where: {
+                  stylistId: session.user.id,
+                },
                 select: {
                   id: true,
                 },
@@ -104,6 +124,9 @@ export async function GET() {
             take: 1,
           },
           receivedRecommendations: {
+            where: {
+              stylistId: session.user.id,
+            },
             select: {
               id: true,
               status: true,

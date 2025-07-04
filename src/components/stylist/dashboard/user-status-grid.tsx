@@ -6,12 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import {
-  AlertCircle,
   ShirtIcon,
   SparklesIcon,
   ShoppingBagIcon,
   ClockIcon,
-  TrendingUpIcon,
   UserIcon,
 } from "lucide-react";
 
@@ -135,16 +133,6 @@ export function UserStatusGrid({ users }: UserStatusGridProps) {
             </CardHeader>
 
             <CardContent className="space-y-4">
-              {/* 警告表示 */}
-              {user.needsAttention && (
-                <div className="flex items-center space-x-2 p-2 bg-orange-100 rounded-lg">
-                  <AlertCircle className="h-4 w-4 text-orange-600" />
-                  <span className="text-sm text-orange-800 font-medium">
-                    対応が必要です
-                  </span>
-                </div>
-              )}
-
               {/* 統計情報 */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
@@ -215,41 +203,33 @@ export function UserStatusGrid({ users }: UserStatusGridProps) {
 
               {/* アクションボタン */}
               <div className="pt-2 space-y-2">
-                <div className="grid grid-cols-2 gap-2">
+                {/* メインアクション */}
+                <div className="grid grid-cols-3 gap-2">
                   <Button asChild size="sm" variant="outline">
-                    <Link href={`/stylist/users/${user.id}`}>詳細確認</Link>
+                    <Link href={`/stylist/users/${user.id}`}>ユーザー詳細</Link>
                   </Button>
                   <Button asChild size="sm" variant="outline">
                     <Link href={`/stylist/users/${user.id}/closet`}>
                       クローゼット
                     </Link>
                   </Button>
+                  <Button asChild size="sm" variant="outline">
+                    <Link href={`/stylist/users/${user.id}/outfits`}>
+                      コーデ一覧
+                    </Link>
+                  </Button>
                 </div>
 
+                {/* 未評価アイテムがある場合の追加アクション */}
                 {user.unevaluatedItems > 0 && (
                   <Button
                     asChild
                     size="sm"
-                    className="w-full"
                     variant="default"
+                    className="w-full bg-orange-500 hover:bg-orange-600"
                   >
-                    <Link href={`/stylist/users/${user.id}/evaluations`}>
-                      <TrendingUpIcon className="h-4 w-4 mr-1" />
-                      評価を行う ({user.unevaluatedItems})
-                    </Link>
-                  </Button>
-                )}
-
-                {user.outfitsCount === 0 && (
-                  <Button
-                    asChild
-                    size="sm"
-                    className="w-full"
-                    variant="default"
-                  >
-                    <Link href={`/stylist/users/${user.id}/outfits/create`}>
-                      <SparklesIcon className="h-4 w-4 mr-1" />
-                      初回コーデ作成
+                    <Link href={`/stylist/users/${user.id}/closet`}>
+                      未評価アイテム {user.unevaluatedItems}件を確認
                     </Link>
                   </Button>
                 )}

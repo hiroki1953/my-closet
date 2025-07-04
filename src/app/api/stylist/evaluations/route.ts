@@ -33,15 +33,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // アイテムが存在するかチェック
+    // アイテムが存在し、ユーザーが担当スタイリストかチェック
     const item = await prisma.clothingItem.findUnique({
       where: { id: itemId },
+      include: {
+        user: {
+          select: {
+            assignedStylistId: true,
+          },
+        },
+      },
     });
 
     if (!item) {
       return NextResponse.json(
         { error: "Clothing item not found" },
         { status: 404 }
+      );
+    }
+
+    // 担当スタイリストかチェック
+    if (item.user.assignedStylistId !== session.user.id) {
+      return NextResponse.json(
+        { error: "Not assigned to this stylist" },
+        { status: 403 }
       );
     }
 

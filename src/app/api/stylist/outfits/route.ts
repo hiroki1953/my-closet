@@ -26,13 +26,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ユーザーが存在するかチェック
+    // ユーザーが存在し、担当スタイリストかチェック
     const user = await prisma.user.findUnique({
-      where: { id: userId, role: "USER" },
+      where: {
+        id: userId,
+        role: "USER",
+        assignedStylistId: session.user.id, // 担当スタイリストかチェック
+      },
     });
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "User not found or not assigned to this stylist" },
+        { status: 404 }
+      );
     }
 
     // 指定されたアイテムがすべて存在し、そのユーザーのものかチェック

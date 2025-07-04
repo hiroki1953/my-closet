@@ -15,10 +15,11 @@ export async function GET() {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // 通常ユーザー（スタイリスト以外）の一覧を取得
+    // このスタイリストが担当するユーザーの一覧を取得
     const users = await prisma.user.findMany({
       where: {
         role: "USER",
+        assignedStylistId: session.user.id,
       },
       include: {
         _count: {

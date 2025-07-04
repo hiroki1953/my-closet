@@ -63,9 +63,7 @@ export default function SignIn() {
             </div>
             <h1 className="text-2xl font-bold text-primary">My Closet</h1>
           </div>
-          <p className="text-muted-foreground">
-            うーちゃんがあなたの専属スタイリスト
-          </p>
+          <p className="text-muted-foreground">専属スタイリストがサポート</p>
         </div>
 
         <Card>

@@ -264,12 +264,12 @@ export default function StylistUserClosetPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-4 md:py-8">
       {/* ヘッダー */}
-      <div className="space-y-4 mb-8">
-        {/* 上部：戻るボタンとタイトル */}
-        <div className="flex items-center space-x-4">
-          <Button asChild variant="ghost" size="sm">
+      <div className="space-y-4 mb-6 md:mb-8">
+        {/* 戻るボタンとタイトル */}
+        <div className="space-y-3">
+          <Button asChild variant="ghost" size="sm" className="w-fit">
             <Link
               href={`/stylist/users/${userId}`}
               className="flex items-center"
@@ -278,15 +278,15 @@ export default function StylistUserClosetPage() {
               戻る
             </Link>
           </Button>
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900 truncate">
+          <div>
+            <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 leading-tight">
               {data.user.name}さんのクローゼット
             </h1>
-            <p className="text-sm text-gray-600 truncate">{data.user.email}</p>
+            <p className="text-sm text-gray-600 mt-1">{data.user.email}</p>
           </div>
         </div>
 
-        {/* 下部：アクションボタン */}
+        {/* アクションボタン */}
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-2">
           <Link
             href={`/stylist/users/${userId}/outfits/create`}
@@ -302,7 +302,8 @@ export default function StylistUserClosetPage() {
             className="flex-1 sm:flex-none"
           >
             <Button variant="outline" size="sm" className="w-full sm:w-auto">
-              購入提案
+              <span className="hidden sm:inline">購入推奨管理</span>
+              <span className="sm:hidden">購入推奨</span>
             </Button>
           </Link>
         </div>
@@ -310,15 +311,15 @@ export default function StylistUserClosetPage() {
 
       {/* ユーザープロフィール概要 */}
       {data.user.profile && (
-        <Card className="mb-6">
+        <Card className="mb-4 md:mb-6">
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <User className="w-5 h-5 mr-2" />
+            <CardTitle className="flex items-center text-base md:text-lg">
+              <User className="w-4 h-4 md:w-5 md:h-5 mr-2" />
               プロフィール情報
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 text-sm md:text-base">
               {data.user.profile.height && (
                 <div>
                   <span className="text-gray-600">身長:</span>
@@ -357,29 +358,33 @@ export default function StylistUserClosetPage() {
       )}
 
       {/* 評価統計と現在の表示状況 */}
-      <div className="space-y-4 mb-6">
+      <div className="space-y-4 mb-4 md:mb-6">
         {/* 評価統計 - 改善版 */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
           <Card className="border-2 border-gray-200 hover:shadow-lg transition-all duration-300">
-            <CardContent className="p-4 text-center">
+            <CardContent className="p-3 md:p-4 text-center">
               <div className="flex items-center justify-center mb-2">
-                <ShirtIcon className="w-6 h-6 text-gray-600" />
+                <ShirtIcon className="w-5 h-5 md:w-6 md:h-6 text-gray-600" />
               </div>
-              <div className="text-2xl font-bold text-gray-900">
+              <div className="text-lg md:text-2xl font-bold text-gray-900">
                 {data.evaluationStats.total}
               </div>
-              <div className="text-sm text-gray-600">総アイテム数</div>
+              <div className="text-xs md:text-sm text-gray-600">
+                総アイテム数
+              </div>
             </CardContent>
           </Card>
           <Card className="border-2 border-blue-200 bg-blue-50 hover:shadow-lg transition-all duration-300">
-            <CardContent className="p-4 text-center">
+            <CardContent className="p-3 md:p-4 text-center">
               <div className="flex items-center justify-center mb-2">
-                <CheckCircle2 className="w-6 h-6 text-blue-600" />
+                <CheckCircle2 className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
               </div>
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-lg md:text-2xl font-bold text-blue-600">
                 {data.evaluationStats.evaluated}
               </div>
-              <div className="text-sm text-blue-700 font-medium">評価済み</div>
+              <div className="text-xs md:text-sm text-blue-700 font-medium">
+                評価済み
+              </div>
               <div className="text-xs text-blue-600 mt-1">
                 進捗:{" "}
                 {Math.round(
@@ -391,78 +396,79 @@ export default function StylistUserClosetPage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="border-2 border-green-200 bg-green-50 hover:shadow-lg transition-all duration-300">
-            <CardContent className="p-4 text-center">
+          <Card className="border-2 border-green-200 bg-green-50 hover:shadow-lg transition-all duration-300 col-span-2 lg:col-span-1">
+            <CardContent className="p-3 md:p-4 text-center">
               <div className="flex items-center justify-center mb-2">
-                <CheckCircle2 className="w-6 h-6 text-green-600" />
+                <CheckCircle2 className="w-5 h-5 md:w-6 md:h-6 text-green-600" />
               </div>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-lg md:text-2xl font-bold text-green-600">
                 {data.evaluationStats.necessary}
               </div>
-              <div className="text-sm text-green-700 font-medium">✅ 必要</div>
+              <div className="text-xs md:text-sm text-green-700 font-medium">
+                ✅ 必要
+              </div>
             </CardContent>
           </Card>
           <Card className="border-2 border-yellow-200 bg-yellow-50 hover:shadow-lg transition-all duration-300">
-            <CardContent className="p-4 text-center">
+            <CardContent className="p-3 md:p-4 text-center">
               <div className="flex items-center justify-center mb-2">
-                <Package className="w-6 h-6 text-yellow-600" />
+                <Package className="w-5 h-5 md:w-6 md:h-6 text-yellow-600" />
               </div>
-              <div className="text-2xl font-bold text-yellow-600">
+              <div className="text-lg md:text-2xl font-bold text-yellow-600">
                 {data.evaluationStats.keep}
               </div>
-              <div className="text-sm text-yellow-700 font-medium">
+              <div className="text-xs md:text-sm text-yellow-700 font-medium">
                 🤔 キープ
               </div>
             </CardContent>
           </Card>
           <Card className="border-2 border-red-200 bg-red-50 hover:shadow-lg transition-all duration-300">
-            <CardContent className="p-4 text-center">
+            <CardContent className="p-3 md:p-4 text-center">
               <div className="flex items-center justify-center mb-2">
-                <XCircle className="w-6 h-6 text-red-600" />
+                <XCircle className="w-5 h-5 md:w-6 md:h-6 text-red-600" />
               </div>
-              <div className="text-2xl font-bold text-red-600">
+              <div className="text-lg md:text-2xl font-bold text-red-600">
                 {data.evaluationStats.unnecessary}
               </div>
-              <div className="text-sm text-red-700 font-medium">❌ 不要</div>
+              <div className="text-xs md:text-sm text-red-700 font-medium">
+                ❌ 不要
+              </div>
             </CardContent>
           </Card>
         </div>
 
         {/* 現在の表示状況 - 改善版 */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-3 md:p-4 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
               <div className="text-sm font-semibold text-blue-900">
                 📊 表示中:{" "}
-                <span className="text-lg font-bold text-blue-700">
+                <span className="text-base md:text-lg font-bold text-blue-700">
                   {filteredItems.length}
                 </span>
                 件のアイテム
               </div>
-              {evaluationFilter !== "all" && (
-                <Badge
-                  variant="outline"
-                  className="bg-white border-blue-300 text-blue-700 font-medium"
-                >
-                  {evaluationFilter === "evaluated"
-                    ? "✅ 評価済みのみ"
-                    : "⏰ 未評価のみ"}
-                </Badge>
-              )}
-              {selectedCategory !== "all" && (
-                <Badge
-                  variant="outline"
-                  className="bg-white border-blue-300 text-blue-700 font-medium"
-                >
-                  {categoryNames[selectedCategory.toUpperCase()] ||
-                    selectedCategory}
-                </Badge>
-              )}
-              {selectedCategory !== "all" && (
-                <Badge variant="outline" className="bg-white">
-                  {categoryNames[selectedCategory.toUpperCase()]}
-                </Badge>
-              )}
+              <div className="flex flex-wrap gap-1 sm:gap-2">
+                {evaluationFilter !== "all" && (
+                  <Badge
+                    variant="outline"
+                    className="bg-white border-blue-300 text-blue-700 font-medium text-xs"
+                  >
+                    {evaluationFilter === "evaluated"
+                      ? "✅ 評価済みのみ"
+                      : "⏰ 未評価のみ"}
+                  </Badge>
+                )}
+                {selectedCategory !== "all" && (
+                  <Badge
+                    variant="outline"
+                    className="bg-white border-blue-300 text-blue-700 font-medium text-xs"
+                  >
+                    {categoryNames[selectedCategory.toUpperCase()] ||
+                      selectedCategory}
+                  </Badge>
+                )}
+              </div>
             </div>
             {(evaluationFilter !== "all" || selectedCategory !== "all") && (
               <Button
@@ -472,7 +478,7 @@ export default function StylistUserClosetPage() {
                   setEvaluationFilter("all");
                   setSelectedCategory("all");
                 }}
-                className="text-blue-700 hover:text-blue-900"
+                className="text-blue-700 hover:text-blue-900 w-full sm:w-auto"
               >
                 フィルターをクリア
               </Button>
@@ -482,18 +488,18 @@ export default function StylistUserClosetPage() {
       </div>
 
       {/* フィルター - 改善版 */}
-      <div className="mb-6 bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-        <div className="flex flex-col sm:flex-row gap-4">
+      <div className="mb-4 md:mb-6 bg-white border border-gray-200 rounded-lg p-3 md:p-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
           <div className="flex-1">
-            <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
-              <Package className="w-4 h-4 mr-1" />
+            <label className="text-xs md:text-sm font-semibold text-gray-700 mb-2 flex items-center">
+              <Package className="w-3 h-3 md:w-4 md:h-4 mr-1" />
               カテゴリフィルター
             </label>
             <Select
               value={selectedCategory}
               onValueChange={setSelectedCategory}
             >
-              <SelectTrigger className="w-full sm:w-56 border-gray-300 hover:border-blue-400 transition-colors">
+              <SelectTrigger className="w-full border-gray-300 hover:border-blue-400 transition-colors">
                 <SelectValue placeholder="カテゴリを選択" />
               </SelectTrigger>
               <SelectContent>
@@ -512,8 +518,8 @@ export default function StylistUserClosetPage() {
           </div>
 
           <div className="flex-1">
-            <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
-              <CheckCircle2 className="w-4 h-4 mr-1" />
+            <label className="text-xs md:text-sm font-semibold text-gray-700 mb-2 flex items-center">
+              <CheckCircle2 className="w-3 h-3 md:w-4 md:h-4 mr-1" />
               評価状況フィルター
             </label>
             <Select
@@ -732,7 +738,7 @@ export default function StylistUserClosetPage() {
                             : "text-gray-800"
                         }`}
                       >
-                        うーちゃんからのコメント
+                        スタイリストからのコメント
                       </div>
                     </div>
                     <p
@@ -817,7 +823,7 @@ export default function StylistUserClosetPage() {
                     className={`w-full ${
                       isEvaluated
                         ? "border-2 opacity-75 hover:opacity-100"
-                        : "bg-blue-600 hover:bg-blue-700 text-white shadow-md"
+                        : "bg-gray-900 hover:bg-black text-white shadow-md"
                     }`}
                     onClick={() => setEvaluatingItemId(item.id)}
                   >

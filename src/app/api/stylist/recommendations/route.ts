@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const { userId, itemType, description, reason, priority } =
+    const { userId, itemType, description, reason, productUrl, priority } =
       await request.json();
 
     if (!userId || !itemType || !description || !reason) {
@@ -25,13 +25,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ユーザーが存在するかチェック
+    // ユーザーが存在し、担当スタイリストかチェック
     const user = await prisma.user.findUnique({
-      where: { id: userId, role: "USER" },
+      where: {
+        id: userId,
+        role: "USER",
+        assignedStylistId: session.user.id, // 担当スタイリストかチェック
+      },
     });
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "User not found or not assigned to this stylist" },
+        { status: 404 }
+      );
     }
 
     // バリデーション
@@ -47,6 +54,7 @@ export async function POST(request: NextRequest) {
         itemType,
         description,
         reason,
+        productUrl: productUrl || null,
         priority: validatedPriority,
         status: "PENDING",
       },
@@ -116,7 +124,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function PATCH(request: NextRequest) {
+export async function PUT(request: NextRequest) {
   try {
     const session = await auth();
 
@@ -129,20 +137,20 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const { id, status } = await request.json();
+    const {
+      id,
+      itemType,
+      description,
+      reason,
+      productUrl,
+      priority,
+      status,
+      declineReason,
+    } = await request.json();
 
-    if (!id || !status) {
+    if (!id || !itemType || !description) {
       return NextResponse.json(
-        { error: "id and status are required" },
-        { status: 400 }
-      );
-    }
-
-    // バリデーション
-    const validStatuses = ["PENDING", "VIEWED", "PURCHASED", "DECLINED"];
-    if (!validStatuses.includes(status)) {
-      return NextResponse.json(
-        { error: "Invalid status value" },
+        { error: "id, itemType, and description are required" },
         { status: 400 }
       );
     }
@@ -163,23 +171,85 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    // バリデーション
+    const validPriorities = ["HIGH", "MEDIUM", "LOW"];
+    const validatedPriority = validPriorities.includes(priority)
+      ? priority
+      : "MEDIUM";
+
+    const validStatuses = ["PENDING", "VIEWED", "PURCHASED", "DECLINED"];
+    const validatedStatus = validStatuses.includes(status)
+      ? status
+      : existingRecommendation.status;
+
     const updatedRecommendation = await prisma.purchaseRecommendation.update({
       where: { id },
-      data: { status },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
+      data: {
+        itemType,
+        description,
+        reason: reason || "",
+        productUrl: productUrl || null,
+        priority: validatedPriority,
+        status: validatedStatus,
+        // 編集時にステータスがPENDINGにリセットされる場合は却下理由もクリア
+        declineReason: status === "PENDING" ? null : declineReason,
       },
     });
 
     return NextResponse.json(updatedRecommendation);
   } catch (error) {
     console.error("Error updating purchase recommendation:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await auth();
+
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // スタイリストのみアクセス可能
+    if (session.user?.role !== "STYLIST") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const { id } = await request.json();
+
+    if (!id) {
+      return NextResponse.json({ error: "id is required" }, { status: 400 });
+    }
+
+    // 推奨がスタイリストのものかチェック
+    const existingRecommendation =
+      await prisma.purchaseRecommendation.findFirst({
+        where: {
+          id,
+          stylistId: session.user.id,
+        },
+      });
+
+    if (!existingRecommendation) {
+      return NextResponse.json(
+        { error: "Recommendation not found" },
+        { status: 404 }
+      );
+    }
+
+    await prisma.purchaseRecommendation.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({
+      message: "Recommendation deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting purchase recommendation:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

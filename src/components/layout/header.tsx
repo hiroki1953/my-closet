@@ -28,12 +28,6 @@ const getNavigationItems = (userRole?: string) => {
         icon: "👥",
         key: "users",
       },
-      {
-        href: "/stylist/evaluations",
-        label: "評価管理",
-        icon: "⭐",
-        key: "evaluations",
-      },
     ];
   }
 

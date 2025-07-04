@@ -164,22 +164,52 @@ export default function StylistUsersPage() {
                       </div>
                     )}
 
-                    <div className="pt-2 space-y-2">
-                      <Button asChild className="w-full" size="sm">
-                        <Link href={`/stylist/users/${user.id}`}>
-                          詳細を確認
-                        </Link>
-                      </Button>
-                      <Button
-                        asChild
-                        variant="outline"
-                        className="w-full"
-                        size="sm"
-                      >
-                        <Link href={`/stylist/users/${user.id}/closet`}>
-                          クローゼットを確認
-                        </Link>
-                      </Button>
+                    <div className="pt-2">
+                      {/* メインアクション */}
+                      <div className="grid grid-cols-3 gap-2">
+                        <Button
+                          asChild
+                          variant="outline"
+                          className="text-xs p-2 h-auto py-2"
+                          size="sm"
+                        >
+                          <Link href={`/stylist/users/${user.id}`}>
+                            <div className="text-center">
+                              <div className="text-xs font-medium">
+                                ユーザー詳細
+                              </div>
+                            </div>
+                          </Link>
+                        </Button>
+                        <Button
+                          asChild
+                          variant="outline"
+                          className="text-xs p-2 h-auto py-2"
+                          size="sm"
+                        >
+                          <Link href={`/stylist/users/${user.id}/closet`}>
+                            <div className="text-center">
+                              <div className="text-xs font-medium">
+                                クローゼット
+                              </div>
+                            </div>
+                          </Link>
+                        </Button>
+                        <Button
+                          asChild
+                          variant="outline"
+                          className="text-xs p-2 h-auto py-2"
+                          size="sm"
+                        >
+                          <Link href={`/stylist/users/${user.id}/outfits`}>
+                            <div className="text-center">
+                              <div className="text-xs font-medium">
+                                コーデ一覧
+                              </div>
+                            </div>
+                          </Link>
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
