@@ -45,13 +45,31 @@ export function StylistDashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await fetch("/api/stylist/dashboard");
+        setLoading(true);
+        
+        // タイムアウト付きでフェッチ
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000); // 20秒タイムアウト
+
+        const response = await fetch("/api/stylist/dashboard", {
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
         if (response.ok) {
           const dashboardData = await response.json();
           setData(dashboardData);
+        } else {
+          console.error("Dashboard fetch failed:", response.status, response.statusText);
         }
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
+        
+        // ネットワークエラーやタイムアウトエラーの場合
+        if (error instanceof Error && error.name === 'AbortError') {
+          console.warn("Dashboard request was aborted due to timeout");
+        }
       } finally {
         setLoading(false);
       }

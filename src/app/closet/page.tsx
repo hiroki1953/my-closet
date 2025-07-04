@@ -24,22 +24,41 @@ export default function Closet() {
     if (!session) return;
 
     try {
+      setLoading(true);
       const params = new URLSearchParams();
       if (selectedCategory !== "ALL") {
         params.append("category", selectedCategory);
       }
       params.append("status", statusFilter);
 
-      const response = await fetch(`/api/clothing-items?${params}`);
+      // タイムアウト付きでフェッチ
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15秒タイムアウト
+
+      const response = await fetch(`/api/clothing-items?${params}`, {
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
       if (response.ok) {
         const data = await response.json();
-        // データが配列であることを確認
         setClothingItems(Array.isArray(data) ? data : []);
+      } else if (response.status === 408) {
+        // タイムアウトエラーの場合
+        console.warn("Request timeout - retrying with smaller dataset");
+        setClothingItems([]);
       } else {
         setClothingItems([]);
       }
     } catch (error) {
       console.error("Failed to fetch clothing items:", error);
+      
+      // ネットワークエラーやタイムアウトエラーの場合
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.warn("Request was aborted due to timeout");
+      }
+      
       setClothingItems([]);
     } finally {
       setLoading(false);

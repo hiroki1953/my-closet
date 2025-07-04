@@ -1,32 +1,69 @@
 import { PrismaClient } from "@prisma/client";
 
+// NODE_ENVが設定されていない場合のデフォルト値
+const nodeEnv = process.env.NODE_ENV || 'development';
+
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-// 開発環境では prepared statement の競合を避けるため、統一された設定を使用
+// 本番環境用の接続設定
+const getDatabaseUrl = () => {
+  const baseUrl = process.env.DATABASE_URL;
+  if (!baseUrl) {
+    throw new Error("DATABASE_URL is not defined");
+  }
+
+  // 本番環境では接続プールの設定を追加
+  if (nodeEnv === "production") {
+    const url = new URL(baseUrl);
+    url.searchParams.set("pgbouncer", "true");
+    url.searchParams.set("connection_limit", "10");
+    url.searchParams.set("pool_timeout", "30");
+    return url.toString();
+  }
+  
+  // 開発環境では制限を緩くする
+  const url = new URL(baseUrl);
+  url.searchParams.set("pgbouncer", "true");
+  url.searchParams.set("connection_limit", "5");
+  return url.toString();
+};
+
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
-    // 開発環境でのprepared statement競合を回避
+    log: nodeEnv === "development" ? ["error", "warn"] : ["error"],
     datasources: {
       db: {
-        url: process.env.NODE_ENV === "development" 
-          ? process.env.DATABASE_URL + "?pgbouncer=true&connection_limit=1"
-          : process.env.NODE_ENV === "production" 
-            ? process.env.DIRECT_URL 
-            : process.env.DATABASE_URL,
+        url: getDatabaseUrl(),
+      },
+    },
+    // 接続タイムアウトの設定
+    __internal: {
+      engine: {
+        queryTimeout: 30000, // 30秒
+        connectTimeout: 5000, // 5秒
       },
     },
   });
 
-// 開発環境では接続を再利用、本番環境では避ける
-if (process.env.NODE_ENV !== "production") {
+// 開発環境でのみ接続を再利用
+if (nodeEnv !== "production") {
   globalForPrisma.prisma = prisma;
-} else {
-  // 本番環境でのクリーンアップ
-  process.on('beforeExit', async () => {
-    await prisma.$disconnect();
-  });
 }
+
+// アプリケーション終了時のクリーンアップ
+process.on('beforeExit', async () => {
+  await prisma.$disconnect();
+});
+
+process.on('SIGINT', async () => {
+  await prisma.$disconnect();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  await prisma.$disconnect();
+  process.exit(0);
+});

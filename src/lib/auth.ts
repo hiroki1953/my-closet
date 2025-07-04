@@ -3,8 +3,11 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
+// NODE_ENVが設定されていない場合のデフォルト値
+const nodeEnv = process.env.NODE_ENV || 'development';
+
 // 本番環境での必須環境変数チェック
-if (process.env.NODE_ENV === "production" && !process.env.NEXTAUTH_SECRET) {
+if (nodeEnv === "production" && !process.env.NEXTAUTH_SECRET) {
   throw new Error("NEXTAUTH_SECRET is required in production");
 }
 
@@ -23,11 +26,6 @@ const authConfig = {
         }
 
         try {
-          // 本番環境では接続を明示的に管理
-          if (process.env.NODE_ENV === "production") {
-            await prisma.$connect();
-          }
-
           const user = await prisma.user.findUnique({
             where: {
               email: credentials.email as string,
@@ -55,20 +53,8 @@ const authConfig = {
           };
         } catch (error) {
           console.error("Auth error:", error);
-          // 本番環境では詳細なエラー情報を隠す
-          if (process.env.NODE_ENV === "production") {
-            console.error("Authentication failed for user:", credentials.email);
-          }
+          console.error("Authentication failed for user:", credentials.email);
           return null;
-        } finally {
-          // 本番環境では必ず接続を切断
-          if (process.env.NODE_ENV === "production") {
-            try {
-              await prisma.$disconnect();
-            } catch (disconnectError) {
-              console.error("Failed to disconnect Prisma in auth:", disconnectError);
-            }
-          }
         }
       },
     }),
@@ -82,8 +68,8 @@ const authConfig = {
     error: "/auth/error",
   },
   trustHost: true,
-  useSecureCookies: process.env.NODE_ENV === "production",
-  debug: process.env.NODE_ENV === "development",
+  useSecureCookies: nodeEnv === "production",
+  debug: nodeEnv === "development",
   callbacks: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async jwt({ token, user }: { token: any; user?: any }) {

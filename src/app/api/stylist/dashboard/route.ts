@@ -65,7 +65,7 @@ export async function GET() {
         },
       }),
 
-      // このスタイリストが担当するユーザー詳細情報
+      // このスタイリストが担当するユーザー詳細情報（制限付き）
       prisma.user.findMany({
         where: {
           role: "USER",
@@ -134,7 +134,7 @@ export async function GET() {
           },
         },
         orderBy: { createdAt: "desc" },
-        take: 20,
+        take: 15, // レコード数を制限してパフォーマンス向上
       }),
     ]);
 
@@ -269,8 +269,21 @@ export async function GET() {
     return NextResponse.json(dashboardData);
   } catch (error) {
     console.error("Dashboard API error:", error);
+    
+    // データベース接続エラーの詳細をログに記録
+    if (error instanceof Error) {
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+      });
+    }
+    
     return NextResponse.json(
-      { error: "Internal server error" },
+      { 
+        error: "Internal server error",
+        timestamp: new Date().toISOString(),
+      },
       { status: 500 }
     );
   }

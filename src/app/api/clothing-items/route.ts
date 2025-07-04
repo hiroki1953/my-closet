@@ -94,32 +94,47 @@ export async function GET(request: NextRequest) {
         | "OUTERWEAR";
     }
 
-    const clothingItems = await prisma.clothingItem.findMany({
-      where: whereClause,
-      include: {
-        evaluations: {
-          include: {
-            stylist: {
-              select: {
-                id: true,
-                name: true,
+    // タイムアウトを設定してクエリを実行
+    const clothingItems = await Promise.race([
+      prisma.clothingItem.findMany({
+        where: whereClause,
+        include: {
+          evaluations: {
+            include: {
+              stylist: {
+                select: {
+                  id: true,
+                  name: true,
+                },
               },
             },
+            orderBy: {
+              createdAt: "desc",
+            },
+            take: 1, // 最新の評価のみ取得
           },
-          orderBy: {
-            createdAt: "desc",
-          },
-          take: 1, // 最新の評価のみ取得
         },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+        orderBy: {
+          createdAt: "desc",
+        },
+      }),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Query timeout")), 10000)
+      ),
+    ]);
 
     return NextResponse.json(clothingItems);
   } catch (error) {
     console.error("Clothing items fetch error:", error);
+    
+    // タイムアウトエラーの場合は特別な処理
+    if (error instanceof Error && error.message === "Query timeout") {
+      return NextResponse.json(
+        { error: "データの取得がタイムアウトしました。しばらく待ってから再試行してください。" },
+        { status: 408 }
+      );
+    }
+    
     return NextResponse.json(
       { error: "服の取得に失敗しました" },
       { status: 500 }
