@@ -6,6 +6,11 @@ import Image from "next/image";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Upload, Camera, Loader2 } from "lucide-react";
+import { 
+  optimizeCameraImage, 
+  formatFileSize, 
+  generateAcceptAttribute 
+} from "@/lib/image-conversion";
 
 interface ImageUploadProps {
   imagePreview: string;
@@ -14,10 +19,36 @@ interface ImageUploadProps {
 
 export function ImageUpload({ imagePreview, onImageChange }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
 
-  const uploadImageToSupabase = useCallback(async (file: File) => {
+  // ファイルを処理してアップロード
+  const processAndUploadFile = useCallback(async (file: File) => {
+    console.log("📤 Processing file:", {
+      name: file.name,
+      type: file.type,
+      size: formatFileSize(file.size)
+    });
+
+    // カメラ画像の場合は最適化
+    let processedFile = file;
+    if (file.name.toLowerCase().includes('image') || file.type.includes('image')) {
+      setUploadProgress("画像を最適化中...");
+      try {
+        processedFile = await optimizeCameraImage(file);
+        console.log("✅ Image optimization completed:", {
+          originalSize: formatFileSize(file.size),
+          optimizedSize: formatFileSize(processedFile.size)
+        });
+      } catch (error) {
+        console.warn("⚠️ Image optimization failed, using original:", error);
+        // 最適化に失敗した場合は元のファイルを使用
+      }
+    }
+
+    setUploadProgress("アップロード中...");
+
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", processedFile);
 
     const response = await fetch("/api/upload/clothing-item", {
       method: "POST",
@@ -38,16 +69,20 @@ export function ImageUpload({ imagePreview, onImageChange }: ImageUploadProps) {
       const file = acceptedFiles[0];
       if (file) {
         setIsUploading(true);
+        setUploadProgress("ファイルを処理中...");
+        
         try {
           // まずプレビュー表示
           const previewUrl = URL.createObjectURL(file);
           onImageChange(previewUrl);
 
           // 実際にアップロード
-          const uploadedUrl = await uploadImageToSupabase(file);
+          const uploadedUrl = await processAndUploadFile(file);
           onImageChange(uploadedUrl);
+          setUploadProgress("アップロード完了!");
         } catch (error) {
           console.error("画像アップロードエラー:", error);
+          setUploadProgress("");
           alert(
             error instanceof Error
               ? error.message
@@ -55,18 +90,18 @@ export function ImageUpload({ imagePreview, onImageChange }: ImageUploadProps) {
           );
         } finally {
           setIsUploading(false);
+          setTimeout(() => setUploadProgress(""), 2000);
         }
       }
     },
-    [onImageChange, uploadImageToSupabase]
+    [onImageChange, processAndUploadFile]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: {
-      "image/*": [".jpeg", ".jpg", ".png", ".webp"],
-    },
+    accept: generateAcceptAttribute(),
     maxFiles: 1,
+    maxSize: 15 * 1024 * 1024, // 15MB
   });
 
   // スマホカメラを直接起動する関数
@@ -79,16 +114,20 @@ export function ImageUpload({ imagePreview, onImageChange }: ImageUploadProps) {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
         setIsUploading(true);
+        setUploadProgress("カメラ画像を処理中...");
+        
         try {
           // まずプレビュー表示
           const previewUrl = URL.createObjectURL(file);
           onImageChange(previewUrl);
 
-          // 実際にアップロード
-          const uploadedUrl = await uploadImageToSupabase(file);
+          // 実際にアップロード（カメラ画像は自動的に最適化される）
+          const uploadedUrl = await processAndUploadFile(file);
           onImageChange(uploadedUrl);
+          setUploadProgress("アップロード完了!");
         } catch (error) {
           console.error("画像アップロードエラー:", error);
+          setUploadProgress("");
           alert(
             error instanceof Error
               ? error.message
@@ -96,11 +135,12 @@ export function ImageUpload({ imagePreview, onImageChange }: ImageUploadProps) {
           );
         } finally {
           setIsUploading(false);
+          setTimeout(() => setUploadProgress(""), 2000);
         }
       }
     };
     input.click();
-  }, [onImageChange, uploadImageToSupabase]);
+  }, [onImageChange, processAndUploadFile]);
 
   return (
     <div className="space-y-2">
@@ -122,7 +162,7 @@ export function ImageUpload({ imagePreview, onImageChange }: ImageUploadProps) {
           ) : (
             <Camera className="w-4 h-4 mr-2" />
           )}
-          {isUploading ? "アップロード中..." : "カメラで撮影"}
+          {isUploading ? uploadProgress || "処理中..." : "カメラで撮影"}
         </Button>
       </div>
 
@@ -162,7 +202,7 @@ export function ImageUpload({ imagePreview, onImageChange }: ImageUploadProps) {
                 ) : (
                   <Camera className="w-4 h-4 mr-1" />
                 )}
-                {isUploading ? "アップロード中..." : "再撮影"}
+                {isUploading ? uploadProgress || "処理中..." : "再撮影"}
               </Button>
             </div>
           </div>
@@ -178,11 +218,14 @@ export function ImageUpload({ imagePreview, onImageChange }: ImageUploadProps) {
             <div>
               <p className="text-sm font-medium text-foreground">
                 {isUploading
-                  ? "画像をアップロード中..."
+                  ? uploadProgress || "画像を処理中..."
                   : "画像をドラッグ&ドロップ または クリックして選択"}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                PNG, JPG, WEBP (最大10MB)
+                JPG, PNG, WEBP, HEIC など (最大15MB)
+              </p>
+              <p className="text-xs text-muted-foreground">
+                📱 カメラ撮影時は自動的にJPEG形式に最適化されます
               </p>
             </div>
           </div>

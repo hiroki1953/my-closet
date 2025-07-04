@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase";
 
+// ファイルサイズを人間が読みやすい形式に変換
+function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log("👕 Clothing item image upload started");
@@ -29,23 +38,24 @@ export async function POST(request: NextRequest) {
       name: file.name,
       type: file.type,
       size: file.size,
+      sizeFormatted: formatFileSize(file.size),
     });
 
-    // ファイルサイズチェック (10MB以下)
-    if (file.size > 10 * 1024 * 1024) {
+    // ファイルサイズチェック (15MB以下)
+    const maxSize = 15 * 1024 * 1024;
+    if (file.size > maxSize) {
       console.error("❌ File too large:", file.size);
       return NextResponse.json(
-        { error: "ファイルサイズが大きすぎます (10MB以下)" },
+        { error: `ファイルサイズが大きすぎます (${formatFileSize(maxSize)}以下)` },
         { status: 400 }
       );
     }
 
-    // ファイル形式チェック
-    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-    if (!allowedTypes.includes(file.type)) {
+    // 基本的な画像ファイル判定
+    if (!file.type.startsWith('image/')) {
       console.error("❌ Invalid file type:", file.type);
       return NextResponse.json(
-        { error: "サポートされていないファイル形式です" },
+        { error: "画像ファイルを選択してください" },
         { status: 400 }
       );
     }
