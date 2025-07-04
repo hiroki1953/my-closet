@@ -28,13 +28,13 @@ import { toast } from "sonner";
 
 interface UserProfile {
   id: string;
-  height?: number;
-  weight?: number;
-  age?: number;
-  bodyType?: string;
-  personalColor?: string;
-  styleGoals?: string;
-  lifestyle?: string;
+  height?: number | null;
+  weight?: number | null;
+  age?: number | null;
+  bodyType?: string | null;
+  personalColor?: string | null;
+  styleGoals?: string | null;
+  lifestyle?: string | null;
 }
 
 interface User {

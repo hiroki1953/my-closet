@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface ProfileImageUploadProps {
-  currentImageUrl?: string;
-  onImageChange: (imageUrl: string) => void;
+  currentImageUrl?: string | null;
+  onImageChange: (imageUrl: string | null) => void;
 }
 
 export function ProfileImageUpload({
@@ -22,6 +22,7 @@ export function ProfileImageUpload({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const uploadImage = useCallback(async (file: File) => {
+    console.log("📸 Starting image upload:", file.name, file.size);
     const formData = new FormData();
     formData.append("file", file);
 
@@ -30,12 +31,23 @@ export function ProfileImageUpload({
       body: formData,
     });
 
+    console.log("📥 Upload response status:", response.status);
+    const responseText = await response.text();
+    console.log("📥 Upload response text:", responseText);
+
     if (!response.ok) {
-      const error = await response.json();
+      let error;
+      try {
+        error = JSON.parse(responseText);
+      } catch {
+        error = { error: responseText };
+      }
+      console.error("❌ Upload failed:", error);
       throw new Error(error.error || "アップロードに失敗しました");
     }
 
-    const data = await response.json();
+    const data = JSON.parse(responseText);
+    console.log("✅ Upload successful, URL:", data.url);
     return data.url;
   }, []);
 
@@ -68,15 +80,22 @@ export function ProfileImageUpload({
         // プレビュー表示
         const reader = new FileReader();
         reader.onload = (e) => {
-          setPreviewUrl(e.target?.result as string);
+          const previewUrl = e.target?.result as string;
+          console.log("🖼️ Preview URL generated");
+          setPreviewUrl(previewUrl);
         };
         reader.readAsDataURL(file);
 
         // アップロード実行
+        console.log("🚀 Starting upload process");
         const imageUrl = await uploadImage(file);
+        console.log(
+          "✅ Upload completed, calling onImageChange with:",
+          imageUrl
+        );
         onImageChange(imageUrl);
       } catch (error) {
-        console.error("画像アップロードエラー:", error);
+        console.error("💥 Image upload error:", error);
         alert(
           error instanceof Error ? error.message : "アップロードに失敗しました"
         );

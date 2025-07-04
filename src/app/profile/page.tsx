@@ -20,17 +20,17 @@ import { ProfileImageUpload } from "@/components/profile/profile-image-upload";
 
 interface UserProfile {
   id?: string;
-  height?: number;
-  weight?: number;
-  age?: number;
-  bodyType?: string;
-  personalColor?: string;
-  profileImageUrl?: string;
-  stylePreference?: string;
-  concerns?: string;
-  goals?: string;
-  budget?: string;
-  lifestyle?: string;
+  height?: number | null;
+  weight?: number | null;
+  age?: number | null;
+  bodyType?: string | null;
+  personalColor?: string | null;
+  profileImageUrl?: string | null;
+  stylePreference?: string | null;
+  concerns?: string | null;
+  goals?: string | null;
+  budget?: string | null;
+  lifestyle?: string | null;
   isPublic: boolean;
 }
 
@@ -110,13 +110,31 @@ export default function ProfilePage() {
       });
 
       console.log("📥 Server response status:", response.status);
+      const responseText = await response.text();
+      console.log("📥 Server response text:", responseText);
 
       if (response.ok) {
-        const result = await response.json();
+        const result = JSON.parse(responseText);
         console.log("✅ Profile saved successfully:", result);
+
+        // 保存後にプロフィールデータを再取得
+        const fetchResponse = await fetch("/api/user/profile");
+        if (fetchResponse.ok) {
+          const fetchData = await fetchResponse.json();
+          if (fetchData.profile) {
+            setProfile(fetchData.profile);
+            console.log("✅ Profile reloaded after save");
+          }
+        }
+
         alert("プロフィールを保存しました");
       } else {
-        const errorData = await response.json();
+        let errorData;
+        try {
+          errorData = JSON.parse(responseText);
+        } catch {
+          errorData = { error: responseText };
+        }
         console.error("❌ Save failed:", errorData);
         alert(`保存に失敗しました: ${errorData.error || "不明なエラー"}`);
       }
@@ -179,9 +197,40 @@ export default function ProfilePage() {
               {/* プロフィール写真 */}
               <ProfileImageUpload
                 currentImageUrl={profile.profileImageUrl}
-                onImageChange={(imageUrl) =>
-                  setProfile({ ...profile, profileImageUrl: imageUrl })
-                }
+                onImageChange={async (imageUrl) => {
+                  console.log("🖼️ Image URL changed:", imageUrl);
+                  const updatedProfile = {
+                    ...profile,
+                    profileImageUrl: imageUrl,
+                  };
+                  setProfile(updatedProfile);
+
+                  // 画像アップロード後にプロフィールを自動保存
+                  if (
+                    imageUrl &&
+                    typeof imageUrl === "string" &&
+                    imageUrl.startsWith("http")
+                  ) {
+                    console.log("💾 Auto-saving profile after image upload");
+                    try {
+                      const response = await fetch("/api/user/profile", {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify(updatedProfile),
+                      });
+
+                      if (response.ok) {
+                        console.log("✅ Profile auto-saved successfully");
+                      } else {
+                        console.error("❌ Profile auto-save failed");
+                      }
+                    } catch (error) {
+                      console.error("💥 Error during auto-save:", error);
+                    }
+                  }
+                }}
               />
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -197,7 +246,7 @@ export default function ProfilePage() {
                         ...profile,
                         height: e.target.value
                           ? parseInt(e.target.value)
-                          : undefined,
+                          : null,
                       })
                     }
                   />
@@ -214,7 +263,7 @@ export default function ProfilePage() {
                         ...profile,
                         weight: e.target.value
                           ? parseInt(e.target.value)
-                          : undefined,
+                          : null,
                       })
                     }
                   />
@@ -229,9 +278,7 @@ export default function ProfilePage() {
                     onChange={(e) =>
                       setProfile({
                         ...profile,
-                        age: e.target.value
-                          ? parseInt(e.target.value)
-                          : undefined,
+                        age: e.target.value ? parseInt(e.target.value) : null,
                       })
                     }
                   />
@@ -252,7 +299,10 @@ export default function ProfilePage() {
                   <Select
                     value={profile.bodyType || ""}
                     onValueChange={(value) =>
-                      setProfile({ ...profile, bodyType: value })
+                      setProfile({
+                        ...profile,
+                        bodyType: value === "" ? null : value,
+                      })
                     }
                   >
                     <SelectTrigger>
@@ -272,7 +322,10 @@ export default function ProfilePage() {
                   <Select
                     value={profile.personalColor || ""}
                     onValueChange={(value) =>
-                      setProfile({ ...profile, personalColor: value })
+                      setProfile({
+                        ...profile,
+                        personalColor: value === "" ? null : value,
+                      })
                     }
                   >
                     <SelectTrigger>
@@ -304,7 +357,10 @@ export default function ProfilePage() {
                   placeholder="例：カジュアル、きれいめ、ストリート系など"
                   value={profile.stylePreference || ""}
                   onChange={(e) =>
-                    setProfile({ ...profile, stylePreference: e.target.value })
+                    setProfile({
+                      ...profile,
+                      stylePreference: e.target.value || null,
+                    })
                   }
                 />
               </div>
@@ -315,7 +371,7 @@ export default function ProfilePage() {
                   placeholder="例：女性にモテたい、ビジネスシーンで好印象を与えたい、垢抜けたいなど"
                   value={profile.goals || ""}
                   onChange={(e) =>
-                    setProfile({ ...profile, goals: e.target.value })
+                    setProfile({ ...profile, goals: e.target.value || null })
                   }
                 />
               </div>
@@ -326,7 +382,7 @@ export default function ProfilePage() {
                   placeholder="例：スタイルを良く見せたい、顔を小さく見せたいなど"
                   value={profile.concerns || ""}
                   onChange={(e) =>
-                    setProfile({ ...profile, concerns: e.target.value })
+                    setProfile({ ...profile, concerns: e.target.value || null })
                   }
                 />
               </div>
@@ -346,7 +402,10 @@ export default function ProfilePage() {
                   placeholder="例：オフィス勤務、リモートワーク、営業職、学生など"
                   value={profile.lifestyle || ""}
                   onChange={(e) =>
-                    setProfile({ ...profile, lifestyle: e.target.value })
+                    setProfile({
+                      ...profile,
+                      lifestyle: e.target.value || null,
+                    })
                   }
                 />
               </div>
@@ -357,7 +416,7 @@ export default function ProfilePage() {
                   placeholder="例：1着1万円以下、季節ごとに5万円程度など"
                   value={profile.budget || ""}
                   onChange={(e) =>
-                    setProfile({ ...profile, budget: e.target.value })
+                    setProfile({ ...profile, budget: e.target.value || null })
                   }
                 />
               </div>

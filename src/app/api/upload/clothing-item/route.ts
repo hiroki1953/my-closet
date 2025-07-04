@@ -5,14 +5,7 @@ import crypto from "crypto";
 
 export async function POST(request: NextRequest) {
   try {
-    console.log("📸 Profile image upload started");
-    console.log("🔍 Environment check:");
-    console.log("- SUPABASE_URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
-    console.log(
-      "- SERVICE_KEY exists:",
-      !!process.env.SUPABASE_SERVICE_ROLE_KEY
-    );
-
+    console.log("👕 Clothing item image upload started");
     const session = await auth();
 
     if (!session?.user?.id) {
@@ -62,92 +55,40 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes);
 
     // ユニークなファイル名を生成
+    const timestamp = Date.now();
     const hash = crypto.createHash("sha256").update(buffer).digest("hex");
     const fileExtension = file.name.split(".").pop() || "png";
-    const filename = `profile_${session.user.id}_${hash.substring(
+    const filename = `clothing_${session.user.id}_${timestamp}_${hash.substring(
       0,
       8
     )}.${fileExtension}`;
 
     console.log("📤 Uploading to Supabase Storage:", filename);
-    console.log("📦 Upload details:", {
-      bucket: "profile-images",
-      filename,
-      contentType: file.type,
-      size: buffer.length,
-    });
-
-    // Supabase管理者クライアントの接続テスト
-    try {
-      const { data: buckets, error: bucketsError } =
-        await supabaseAdmin.storage.listBuckets();
-      if (bucketsError) {
-        console.error("❌ Failed to list buckets:", bucketsError);
-        throw new Error(`Bucket access failed: ${bucketsError.message}`);
-      }
-      console.log(
-        "✅ Available buckets:",
-        buckets?.map((b) => b.name)
-      );
-
-      const profileBucket = buckets?.find((b) => b.name === "profile-images");
-      if (!profileBucket) {
-        console.error("❌ profile-images bucket not found");
-        throw new Error("Profile images bucket not found");
-      }
-      console.log("✅ profile-images bucket found and accessible");
-    } catch (bucketError) {
-      console.error("💥 Bucket check failed:", bucketError);
-      return NextResponse.json(
-        {
-          error: `ストレージバケットへのアクセスに失敗しました: ${bucketError}`,
-        },
-        { status: 500 }
-      );
-    }
 
     // Supabase Storageにアップロード
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
-      .from("profile-images")
+      .from("clothing-items")
       .upload(filename, buffer, {
         contentType: file.type,
-        upsert: true, // 同じファイル名の場合は上書き
+        upsert: false, // 重複しない名前なので上書きしない
       });
 
     if (uploadError) {
-      console.error("💥 Supabase upload error:", {
-        message: uploadError.message,
-        name: uploadError.name,
-      });
+      console.error("💥 Supabase upload error:", uploadError);
 
-      // より具体的なエラーメッセージ
+      // バケットが存在しない場合の詳細なエラーメッセージ
       if (uploadError.message.includes("Bucket not found")) {
         return NextResponse.json(
           {
             error:
               "ストレージバケットが見つかりません。管理者に連絡してください。",
-            details: uploadError.message,
-          },
-          { status: 500 }
-        );
-      }
-
-      if (uploadError.message.includes("insufficient_privilege")) {
-        return NextResponse.json(
-          {
-            error:
-              "ストレージへのアクセス権限がありません。管理者に連絡してください。",
-            details: uploadError.message,
           },
           { status: 500 }
         );
       }
 
       return NextResponse.json(
-        {
-          error: `画像のアップロードに失敗しました: ${uploadError.message}`,
-          details: uploadError.message,
-        },
+        { error: `画像のアップロードに失敗しました: ${uploadError.message}` },
         { status: 500 }
       );
     }
@@ -156,7 +97,7 @@ export async function POST(request: NextRequest) {
 
     // 公開URLを生成
     const { data: publicUrlData } = supabaseAdmin.storage
-      .from("profile-images")
+      .from("clothing-items")
       .getPublicUrl(filename);
 
     const imageUrl = publicUrlData.publicUrl;
@@ -167,7 +108,7 @@ export async function POST(request: NextRequest) {
       url: imageUrl,
     });
   } catch (error) {
-    console.error("💥 Profile image upload error:", {
+    console.error("💥 Clothing item image upload error:", {
       name: error instanceof Error ? error.name : "Unknown",
       message: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,

@@ -4,21 +4,43 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
 const profileSchema = z.object({
-  height: z.number().int().min(100).max(250).optional(),
-  weight: z.number().int().min(30).max(200).optional(),
-  age: z.number().int().min(10).max(100).optional(),
-  bodyType: z.enum(["STRAIGHT", "WAVE", "NATURAL", "UNKNOWN"]).optional(),
+  height: z.union([z.number().int().min(100).max(250), z.null()]).optional(),
+  weight: z.union([z.number().int().min(30).max(200), z.null()]).optional(),
+  age: z.union([z.number().int().min(10).max(100), z.null()]).optional(),
+  bodyType: z
+    .enum(["STRAIGHT", "WAVE", "NATURAL", "UNKNOWN"])
+    .nullable()
+    .optional(),
   personalColor: z
     .enum(["SPRING", "SUMMER", "AUTUMN", "WINTER", "UNKNOWN"])
+    .nullable()
     .optional(),
-  profileImageUrl: z.string().optional(), // URLバリデーションを削除（空文字列を許可）
-  stylePreference: z.string().optional(),
-  concerns: z.string().optional(),
-  goals: z.string().optional(),
-  budget: z.string().optional(),
-  lifestyle: z.string().optional(),
-  isPublic: z.boolean().optional(),
+  profileImageUrl: z.string().nullable().optional(), // 空文字列とnullを許可
+  stylePreference: z.string().nullable().optional(),
+  concerns: z.string().nullable().optional(),
+  goals: z.string().nullable().optional(),
+  budget: z.string().nullable().optional(),
+  lifestyle: z.string().nullable().optional(),
+  isPublic: z.boolean().optional().default(false),
 });
+
+// データを前処理する関数
+function preprocessProfileData(data: Record<string, unknown>) {
+  const processed = { ...data };
+
+  // 空文字列をnullに変換
+  Object.keys(processed).forEach((key) => {
+    if (processed[key] === "") {
+      processed[key] = null;
+    }
+    // "UNKNOWN"を null に変換（選択されていない状態として扱う）
+    if (processed[key] === "UNKNOWN") {
+      processed[key] = null;
+    }
+  });
+
+  return processed;
+}
 
 export async function GET() {
   try {
@@ -70,20 +92,26 @@ export async function GET() {
         { key: "budget", label: "予算感" },
       ];
 
-      const completedFields = fields.filter(
-        (field) =>
-          profile[field.key] &&
-          profile[field.key] !== "UNKNOWN" &&
-          String(profile[field.key]).trim() !== ""
-      );
+      const completedFields = fields.filter((field) => {
+        const value = profile[field.key];
+        return (
+          value !== null &&
+          value !== undefined &&
+          value !== "UNKNOWN" &&
+          String(value).trim() !== ""
+        );
+      });
 
       const missingFields = fields
-        .filter(
-          (field) =>
-            !profile[field.key] ||
-            profile[field.key] === "UNKNOWN" ||
-            String(profile[field.key]).trim() === ""
-        )
+        .filter((field) => {
+          const value = profile[field.key];
+          return (
+            value === null ||
+            value === undefined ||
+            value === "UNKNOWN" ||
+            String(value).trim() === ""
+          );
+        })
         .map((field) => field.label);
 
       const percentage = Math.round(
@@ -144,9 +172,20 @@ export async function POST(request: Request) {
     const body = await request.json();
     console.log("📦 Request body received:", JSON.stringify(body, null, 2));
 
+    // データを前処理
+    console.log("🔄 Preprocessing profile data...");
+    const preprocessedData = preprocessProfileData(body);
+    console.log(
+      "📋 Preprocessed data:",
+      JSON.stringify(preprocessedData, null, 2)
+    );
+
     console.log("🔍 Validating data with Zod schema...");
-    const validatedData = profileSchema.parse(body);
-    console.log("✅ Data validation successful:", JSON.stringify(validatedData, null, 2));
+    const validatedData = profileSchema.parse(preprocessedData);
+    console.log(
+      "✅ Data validation successful:",
+      JSON.stringify(validatedData, null, 2)
+    );
 
     // Prisma接続を確認
     console.log("🔗 Testing database connection...");
@@ -167,28 +206,39 @@ export async function POST(request: Request) {
 
     console.log("📊 Existing profile found:", !!existingProfile);
     if (existingProfile) {
-      console.log("📋 Existing profile data:", JSON.stringify(existingProfile, null, 2));
+      console.log(
+        "📋 Existing profile data:",
+        JSON.stringify(existingProfile, null, 2)
+      );
     }
 
     let profile;
     if (existingProfile) {
       // 更新
       console.log("📝 Updating existing profile...");
+      console.log("📝 Update data:", JSON.stringify(validatedData, null, 2));
       profile = await prisma.userProfile.update({
         where: { userId: session.user.id },
         data: validatedData,
       });
-      console.log("✅ Profile updated successfully");
+      console.log(
+        "✅ Profile updated successfully:",
+        JSON.stringify(profile, null, 2)
+      );
     } else {
       // 新規作成
       console.log("➕ Creating new profile...");
+      console.log("➕ Create data:", JSON.stringify(validatedData, null, 2));
       profile = await prisma.userProfile.create({
         data: {
           userId: session.user.id,
           ...validatedData,
         },
       });
-      console.log("✅ Profile created successfully");
+      console.log(
+        "✅ Profile created successfully:",
+        JSON.stringify(profile, null, 2)
+      );
     }
 
     console.log("🎉 Final profile:", JSON.stringify(profile, null, 2));
