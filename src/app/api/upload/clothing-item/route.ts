@@ -54,14 +54,15 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // ユニークなファイル名を生成
+    // ファイル拡張子を安全に取得（大文字小文字を正規化）
+    const originalExtension = file.name.split(".").pop()?.toLowerCase() || "";
+    const safeExtension = originalExtension.match(/^(jpg|jpeg|png|webp)$/) ? originalExtension : "png";
+    
+    // ユニークで安全なファイル名を生成（英数字とハイフン、アンダースコアのみ）
     const timestamp = Date.now();
     const hash = crypto.createHash("sha256").update(buffer).digest("hex");
-    const fileExtension = file.name.split(".").pop() || "png";
-    const filename = `clothing_${session.user.id}_${timestamp}_${hash.substring(
-      0,
-      8
-    )}.${fileExtension}`;
+    const safeUserId = session.user.id.replace(/[^a-zA-Z0-9]/g, ""); // 英数字のみ
+    const filename = `clothing-${safeUserId}-${timestamp}-${hash.substring(0, 8)}.${safeExtension}`;
 
     console.log("📤 Uploading to Supabase Storage:", filename);
 
