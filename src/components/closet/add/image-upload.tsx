@@ -6,10 +6,10 @@ import Image from "next/image";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Upload, Camera, Loader2 } from "lucide-react";
-import { 
-  optimizeCameraImage, 
-  formatFileSize, 
-  generateAcceptAttribute 
+import {
+  optimizeCameraImage,
+  formatFileSize,
+  generateAcceptAttribute,
 } from "@/lib/image-conversion";
 
 interface ImageUploadProps {
@@ -26,18 +26,21 @@ export function ImageUpload({ imagePreview, onImageChange }: ImageUploadProps) {
     console.log("📤 Processing file:", {
       name: file.name,
       type: file.type,
-      size: formatFileSize(file.size)
+      size: formatFileSize(file.size),
     });
 
     // カメラ画像の場合は最適化
     let processedFile = file;
-    if (file.name.toLowerCase().includes('image') || file.type.includes('image')) {
+    if (
+      file.name.toLowerCase().includes("image") ||
+      file.type.includes("image")
+    ) {
       setUploadProgress("画像を最適化中...");
       try {
         processedFile = await optimizeCameraImage(file);
         console.log("✅ Image optimization completed:", {
           originalSize: formatFileSize(file.size),
-          optimizedSize: formatFileSize(processedFile.size)
+          optimizedSize: formatFileSize(processedFile.size),
         });
       } catch (error) {
         console.warn("⚠️ Image optimization failed, using original:", error);
@@ -70,7 +73,7 @@ export function ImageUpload({ imagePreview, onImageChange }: ImageUploadProps) {
       if (file) {
         setIsUploading(true);
         setUploadProgress("ファイルを処理中...");
-        
+
         try {
           // まずプレビュー表示
           const previewUrl = URL.createObjectURL(file);
@@ -115,7 +118,7 @@ export function ImageUpload({ imagePreview, onImageChange }: ImageUploadProps) {
       if (file) {
         setIsUploading(true);
         setUploadProgress("カメラ画像を処理中...");
-        
+
         try {
           // まずプレビュー表示
           const previewUrl = URL.createObjectURL(file);

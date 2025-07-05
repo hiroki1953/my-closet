@@ -126,15 +126,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(clothingItems);
   } catch (error) {
     console.error("Clothing items fetch error:", error);
-    
+
     // タイムアウトエラーの場合は特別な処理
     if (error instanceof Error && error.message === "Query timeout") {
       return NextResponse.json(
-        { error: "データの取得がタイムアウトしました。しばらく待ってから再試行してください。" },
+        {
+          error:
+            "データの取得がタイムアウトしました。しばらく待ってから再試行してください。",
+        },
         { status: 408 }
       );
     }
-    
+
     return NextResponse.json(
       { error: "服の取得に失敗しました" },
       { status: 500 }

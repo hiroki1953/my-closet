@@ -53,12 +53,12 @@ export default function Closet() {
       }
     } catch (error) {
       console.error("Failed to fetch clothing items:", error);
-      
+
       // ネットワークエラーやタイムアウトエラーの場合
-      if (error instanceof Error && error.name === 'AbortError') {
+      if (error instanceof Error && error.name === "AbortError") {
         console.warn("Request was aborted due to timeout");
       }
-      
+
       setClothingItems([]);
     } finally {
       setLoading(false);

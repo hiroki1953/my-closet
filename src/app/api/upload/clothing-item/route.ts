@@ -4,11 +4,11 @@ import { supabaseAdmin } from "@/lib/supabase";
 
 // ファイルサイズを人間が読みやすい形式に変換
 function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) return "0 Bytes";
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
 
 export async function POST(request: NextRequest) {
@@ -46,13 +46,17 @@ export async function POST(request: NextRequest) {
     if (file.size > maxSize) {
       console.error("❌ File too large:", file.size);
       return NextResponse.json(
-        { error: `ファイルサイズが大きすぎます (${formatFileSize(maxSize)}以下)` },
+        {
+          error: `ファイルサイズが大きすぎます (${formatFileSize(
+            maxSize
+          )}以下)`,
+        },
         { status: 400 }
       );
     }
 
     // 基本的な画像ファイル判定
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith("image/")) {
       console.error("❌ Invalid file type:", file.type);
       return NextResponse.json(
         { error: "画像ファイルを選択してください" },
@@ -77,18 +81,20 @@ export async function POST(request: NextRequest) {
         safeExtension = "webp";
         break;
     }
-    
+
     // より安全なファイル名を生成（数字とアルファベットのみ）
     const timestamp = Date.now();
     const randomSuffix = Math.random().toString(36).substring(2, 8); // 6文字のランダム文字列
-    const safeUserId = session.user.id.replace(/[^a-zA-Z0-9]/g, "").substring(0, 8); // 8文字に制限
-    
+    const safeUserId = session.user.id
+      .replace(/[^a-zA-Z0-9]/g, "")
+      .substring(0, 8); // 8文字に制限
+
     // 複数のファイル名パターンを試行する
     const filenameOptions = [
       `img${timestamp}${randomSuffix}.${safeExtension}`, // 最もシンプル
       `clothing${timestamp}.${safeExtension}`, // シンプル2
       `c${safeUserId}${timestamp}.${safeExtension}`, // ユーザーID含む
-      `clothing${safeUserId}${timestamp}${randomSuffix}.${safeExtension}` // 元の形式
+      `clothing${safeUserId}${timestamp}${randomSuffix}.${safeExtension}`, // 元の形式
     ];
 
     console.log("📤 Trying multiple filename patterns...");
@@ -98,7 +104,7 @@ export async function POST(request: NextRequest) {
       size: file.size,
       userId: session.user.id,
       safeUserId: safeUserId,
-      filenameOptions: filenameOptions
+      filenameOptions: filenameOptions,
     });
 
     // 複数のファイル名パターンを順番に試行
@@ -108,7 +114,7 @@ export async function POST(request: NextRequest) {
 
     for (const filename of filenameOptions) {
       console.log(`🔄 Trying filename: ${filename}`);
-      
+
       const { data, error } = await supabaseAdmin.storage
         .from("clothing-items")
         .upload(filename, buffer, {
@@ -130,7 +136,9 @@ export async function POST(request: NextRequest) {
     if (!uploadData || lastError) {
       console.error("💥 All filename patterns failed. Last error:", lastError);
       return NextResponse.json(
-        { error: `すべてのファイル名パターンで失敗しました: ${lastError?.message}` },
+        {
+          error: `すべてのファイル名パターンで失敗しました: ${lastError?.message}`,
+        },
         { status: 500 }
       );
     }

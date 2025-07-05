@@ -46,7 +46,7 @@ export function StylistDashboard() {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        
+
         // タイムアウト付きでフェッチ
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 20000); // 20秒タイムアウト
@@ -61,13 +61,17 @@ export function StylistDashboard() {
           const dashboardData = await response.json();
           setData(dashboardData);
         } else {
-          console.error("Dashboard fetch failed:", response.status, response.statusText);
+          console.error(
+            "Dashboard fetch failed:",
+            response.status,
+            response.statusText
+          );
         }
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
-        
+
         // ネットワークエラーやタイムアウトエラーの場合
-        if (error instanceof Error && error.name === 'AbortError') {
+        if (error instanceof Error && error.name === "AbortError") {
           console.warn("Dashboard request was aborted due to timeout");
         }
       } finally {

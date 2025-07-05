@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
 // NODE_ENVが設定されていない場合のデフォルト値
-const nodeEnv = process.env.NODE_ENV || 'development';
+const nodeEnv = process.env.NODE_ENV || "development";
 
 // 本番環境での必須環境変数チェック
 if (nodeEnv === "production" && !process.env.NEXTAUTH_SECRET) {
